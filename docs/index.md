@@ -1,3 +1,35 @@
+## Project start
+
+This page will be used to record the installation of a self-hosted devops environment.
+
+The end-goal is to have an infrastructure running several services:
+- Prometheus & Grafana for monitoring purpose
+- Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each host
+- Traefik to handle routing and load-balancing
+- Web application powered by httpd
+
+All these applications will be running inside dockers, as to be scalable in the future
+
+It will start as a single host project and will slowly be turning into multiple-hosts
+
+## First installation
+
+# Docker
+
+We need to install docker on each host, It has to be done through a sudo or root user as the final process will be running with root privileges (constraint of docker).
+
+We follow the [instructions as per recommended](https://docs.docker.com/engine/install/centos/) to guide us through
+
+We start off with the first docker installation
+
+
+
+
+
+
+
+
+
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/maxime-lair/maxime-lair/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
