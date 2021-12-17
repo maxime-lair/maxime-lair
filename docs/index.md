@@ -24,10 +24,12 @@ We start off with the first docker installation
 
 ## Pre-requisites
 
-We add docker repository as It is not available natively on Centos
+First we check if docker is already installed, we do not want to install on top of an already available version.
+
+Then, we add docker repository as It is not available natively on Centos
 
 ```Shell
-docker //we check if the command is installed
+docker 
 
 sudo yum install -y yum-utils
 
@@ -35,7 +37,7 @@ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/dock
 
  ```
 
-**Note** Since we are running it on Centos 8, It would have been nice to have used `dnf` instead of `yum` as the later is getting deprecated.
+**Note** Since we are running it on Centos 8, It would have been nice to have used `dnf` instead of `yum` as the latter is getting deprecated.
 
 ## Install docker engine
 
