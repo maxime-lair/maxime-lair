@@ -182,7 +182,7 @@ We want to deliver web pages through our server by hosting a docker container ru
 
 We could use an alpine docker image, and add the web server onto it, but there is already an image available on the official website: https://hub.docker.com/_/httpd
 
-To spice it up, we will have 2 docker container, each running the same image, they will deliver the web server on the host on two differents ports : 8081 and 8082.
+To spice it up, we will try to scale the number of web servers, each running the same image, they will deliver the web server on the host on differents ports ranging from 35000 to 35100.
 My objective at the end is to have redundancy, if the first one fails, we can always send them onto the second.
 
 The web content we will deliver is the one available at https://github.com/maxime-lair/binsh
@@ -218,8 +218,8 @@ It started running, can we check the process and web page ?
 ```
 $ docker ps
 CONTAINER ID   IMAGE       COMMAND              CREATED              STATUS              PORTS                                   NAMES
-478222b0c467   httpd:2.4   "httpd-foreground"   About a minute ago   Up About a minute   0.0.0.0:8080->80/tcp, :::8080->80/tcp   my-apache-app
-$ curl http://localhost:8080 
+478222b0c467   httpd:2.4   "httpd-foreground"   About a minute ago   Up About a minute   0.0.0.0:35000->80/tcp, :::35000->80/tcp   my-apache-app
+$ curl http://localhost:35000
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <html>
  <head>
@@ -271,23 +271,20 @@ Now we edit our docker-compose.yml file
 $ cat docker-compose.yml
 version: "3.9"
 services:
-        web_1:
+        web:
                 ports:
-                        - "8081:80"
+                        - "35000-35100:80"
                 image: "httpd:2.4"
                 volumes:
                         - ./binsh/:/usr/local/apache2/htdocs/
-        web_2:
-                ports:
-                        - "8082:80"
-                image: "httpd:2.4"
-                volumes:
-                        - ./binsh/:/usr/local/apache2/htdocs/
+                networks:
+                        - webzone
+networks:
+        webzone:
+                driver: bridge
  ```
  
-We indicate two services: web server 1 and 2 and we map the ports from (host) 808x to port 80 (httpd port in the container)
-
-We use the provided httpd image, imagine we want to upgrade from version 2.4 to 2.5, we could just change one and check for any differences.
+We indicate one service called **web** running on range 35000-35100 on the host and mapped to default httpd port (80)
 
 Then we indicate the HTML files we want to use, and where to place them on the container
 
@@ -303,24 +300,19 @@ Advantage is : If I want to update my webfiles, I can leave the container runnin
 Now we can start the docker-compose:
 
 ```
-$ docker-compose up 
-Creating network "httpd-service_default" with the default driver
-Creating httpd-service_web_1_1 ... done
-Creating httpd-service_web_2_1 ... done
-Attaching to httpd-service_web_2_1, httpd-service_web_1_1
-web_1_1  | AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 172.18.0.2. Set the 'ServerName' directive globally to suppress this message
-web_1_1  | AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 172.18.0.2. Set the 'ServerName' directive globally to suppress this message
-web_1_1  | [Sun Dec 19 16:05:07.947010 2021] [mpm_event:notice] [pid 1:tid 140146190855488] AH00489: Apache/2.4.51 (Unix) configured -- resuming normal operations
-web_1_1  | [Sun Dec 19 16:05:07.947197 2021] [core:notice] [pid 1:tid 140146190855488] AH00094: Command line: 'httpd -D FOREGROUND'
-web_2_1  | AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 172.18.0.3. Set the 'ServerName' directive globally to suppress this message
-web_2_1  | AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 172.18.0.3. Set the 'ServerName' directive globally to suppress this message
-web_2_1  | [Sun Dec 19 16:05:07.909152 2021] [mpm_event:notice] [pid 1:tid 139777255918912] AH00489: Apache/2.4.51 (Unix) configured -- resuming normal operations
-web_2_1  | [Sun Dec 19 16:05:07.909357 2021] [core:notice] [pid 1:tid 139777255918912] AH00094: Command line: 'httpd -D FOREGROUND'
-
-web_1_1  | 92.88.11.91 - - [19/Dec/2021:16:05:41 +0000] "\x16\x03\x01\x02" 400 226
-web_1_1  | 92.88.11.91 - - [19/Dec/2021:16:07:54 +0000] "\x16\x03\x01\x02" 400 226
-web_1_1  | 92.88.11.91 - - [19/Dec/2021:16:09:00 +0000] "GET / HTTP/1.1" 200 3636
-web_2_1  | 92.88.11.91 - - [19/Dec/2021:16:09:06 +0000] "GET / HTTP/1.1" 200 3636
+$ docker-compose up -d --scale web=10
+Creating network "httpd-service_webzone" with driver "bridge"
+WARNING: The "web" service specifies a port on the host. If multiple containers for this service are created on a single host, the port will clash.
+Creating httpd-service_web_1  ... done
+Creating httpd-service_web_2  ... done
+Creating httpd-service_web_3  ... done
+Creating httpd-service_web_4  ... done
+Creating httpd-service_web_5  ... done
+Creating httpd-service_web_6  ... done
+Creating httpd-service_web_7  ... done
+Creating httpd-service_web_8  ... done
+Creating httpd-service_web_9  ... done
+Creating httpd-service_web_10 ... done
 ```
 
 We check on the host if we see our ports opened:
@@ -330,12 +322,20 @@ $ netstat -tlpn
  will not be shown, you would have to be root to see it all.)
 Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
-tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      -                   
-tcp        0      0 0.0.0.0:8081            0.0.0.0:*               LISTEN      -                   
-tcp        0      0 0.0.0.0:8082            0.0.0.0:*               LISTEN      -    
+tcp        0      0 0.0.0.0:35025           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35026           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35027           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35028           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35029           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35030           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35031           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35032           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35033           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35034           0.0.0.0:*               LISTEN      -
 ```
 
-Sure enough, our web servers are up and running, able to deliver the web pages on port 8081 and 8082
+Sure enough, our web servers are up and running, able to deliver the web pages on port 35xxx
 
 We have some warnings at the web server start-up because we did not change the ServerName in the httpd configuration, as the process is unsure of the correct IP It is being hosted on. When we get our proxy running, we will be able to update this to our FQDN binsh.io
 
@@ -343,13 +343,12 @@ If you want to start your container in the background, you can add **-d** argume
 
 ```
 $ docker-compose up -d  
-Starting httpd-service_web_1_1 ... done
-Starting httpd-service_web_2_1 ... done
+Starting httpd-service_web ... done
 ```
 
-We will leave them started for the time being, but we will need to find a way to schedule maintenance at one point with kubernetes, crontab or else.
+But as per the warning said, we are now running into an issue: how to load-balance any requests made to binsh.io on port 80 to the different container available on port 35xxx ? We could use nginx, but It isn't able to tell dynamically which ports/containers are up
 
-Let's now move on to setting up a proxy solution: traeffik
+Let's now move on to setting up a dynamic proxy solution: traefik
 
 ## Traefik
 
@@ -357,6 +356,9 @@ From its website
 > Traefik is a modern HTTP reverse proxy and load balancer that makes deploying microservices easy.
 > Traefik integrates with your existing infrastructure components (Docker, Swarm mode, Kubernetes, Marathon, Consul, Etcd, Rancher, Amazon ECS, ...) and configures itself automatically and dynamically.
 
+Traefik upgraded from V1 to V2 last year, and It's a bit difficult to understand how It now all works with services, endpoints, middlewares, etc.
+
+Let's try it nonetheless
 
 
 
