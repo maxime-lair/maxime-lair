@@ -1,4 +1,4 @@
-## Project start
+# Project start
 
 This page will be used to record the installation of a self-hosted devops environment.
 
@@ -11,8 +11,6 @@ The end-goal is to have an infrastructure running several services:
 All these applications will be running inside dockers, as to be scalable in the future
 
 It will start as a single host project and will slowly be turning into multiple-hosts
-
-## First installation
 
 # Docker
 
@@ -101,8 +99,75 @@ We stop the service because we might have more settings to adjust, and this is n
 
 ## Post-install shenanigan
 
-Work on this part (set up other user, etc)
+The Docker daemon binds to a Unix socket instead of a TCP port. By default that Unix socket is owned by the user root and other users can only access it using sudo. The Docker daemon always runs as the root user.
 
-https://docs.docker.com/engine/install/linux-postinstall/
+We do not want to preface the docker command with sudo, so we create a Unix group called docker and add users to it. When the Docker daemon starts, it creates a Unix socket accessible by members of the docker group.
+
+### Dedicated user creation
+
+We will a user named **produser** for running docker, I simply created it with useradd and added a password to it.
+
+The group docker is created by default now, so we just have to add the new user to the group
+
+```
+$ sudo usermod -aG docker produser
+```
+
+### Test the new user
+
+Now all we need to do is test creating a small docker container with this new user
+
+We connect as produser
+
+```
+$ su produser
+```
+
+And we test a simple hello-world
+
+```
+$ docker run hello-world
+```
+
+It won't work as we previously stopped the docker daemon
+
+We connect back on our sudo user and we enable the service (so It's available at next reboot) and start it
+
+```
+$ sudo systemctl enable docker.service
+$ sudo systemctl start docker.service
+$ sudo systemctl enable containerd.service
+$ sudo systemctl start containerd.service
+```
+
+Then we connect back on our new user, and test its status
+
+```
+$ systemctl status containerd.service
+● containerd.service - containerd container runtime
+   Loaded: loaded (/usr/lib/systemd/system/containerd.service; enabled; vendor preset: disabled)
+   Active: active (running)
+     Docs: https://containerd.io
+ Main PID: 84811 (containerd)
+```
+
+It's running well, we can try our hello-world
+
+```
+$ docker run hello-world
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+```
+
+It works, we can move on onto the next part, starting each docker container containing our different service (web, monitoring, proxy)
+
+## Httpd web server
+
+We want to deliver web pages through our server by hosting a docker container running a httpd process
+
+We could use an alpine docker image, and add the web server onto it, but there is already an image available on the official website: https://hub.docker.com/_/httpd
+
+Let's use it !
 
 
