@@ -24,7 +24,10 @@ It will start as a single host project and will slowly be turning into multiple-
 	- [Test-the-docker-image](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#test-the-docker-image)
 	- [Docker-compose](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#docker-compose)
 3. [traefik](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#traefik)
-
+	- [Adding load balancer and reverse-proxy](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-load-balancer-and-reverse-proxy)
+	- [Adding TLS and HTTPS](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-TLS-and-HTTPS)
+4. Node_exporter & Cadvisor
+5. Prometheus & Grafana
 
 # Docker
 
@@ -352,6 +355,8 @@ Let's now move on to setting up a dynamic proxy solution: traefik
 
 ## Traefik
 
+### Adding load balancer and reverse-proxy
+
 From its website
 > Traefik is a modern HTTP reverse proxy and load balancer that makes deploying microservices easy.
 > Traefik integrates with your existing infrastructure components (Docker, Swarm mode, Kubernetes, Marathon, Consul, Etcd, Rancher, Amazon ECS, ...) and configures itself automatically and dynamically.
@@ -360,8 +365,141 @@ Traefik upgraded from V1 to V2 last year, and It's a bit difficult to understand
 
 Let's try it nonetheless
 
+First, we create two configurations for traefik, a static configuration, which tells him what do we expose (where do we want requests to come in)
+ 
+ **traefik.yml**
+ ```
+ ## traefik.yml
+
+entryPoints:
+        http:
+                address: ":80"
+        https:
+                address: ":443"
 
 
+# Docker configuration backend
+providers:
+  file:
+          filename: dynamic_conf.yml
+          watch: true
+  docker:
+          endpoint: "unix:///var/run/docker.sock"
+          exposedByDefault: false
+
+# API and dashboard configuration
+api:
+  insecure: true
+ ```
+
+We ask to listen on port 80 for http and https for 443, the usual.
+Then we provide him a dynamic configuration file, that we will explain later, we want to keep watching this file in case of update so It can be applied live.
+Then we tell him to listen for any new containers on the host, as we want to monitor/route onto them
+
+Lastly, we expose the api, in an insecure way for now, we will add TLS/HTTPS later
+
+We create our **dynamic_conf.yml** file
+
+```
+http:
+    routers:
+        http_router:
+            rule: "Host(`binsh.io`)"
+            service: web
+    services:
+        web:
+            loadBalancer:
+                servers:
+                    - url: "http://httpd/
+```
+
+Here we provide a simple rule for routing: if we receive requests for our FQDN **binsh.io**, we load balance it on any servers responding to **httpd**
+
+What is this httpd url then ? That's where trafik is nice, It will listen in the **docker-compose.yml** file (by listening on __/var/run/docker.sock__) and routes every request to binsh.io to these containers running a httpd web server. We do not need to indicate or even know the port, traefik will do it for us.
+
+The **docker-compose.yml** file:
+```
+version: "3.9"
+services:
+        httpd:
+                ports:
+                        - "35000-35100:80"
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+			- ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - webzone
+        traefik:
+                image: traefik:latest
+                command: --api.insecure=true --providers.docker
+                ports:
+                        # The HTTP port
+                        - "80:80"
+                        # The Web UI (enabled by --api.insecure=true)
+                        - "8080:8080"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                networks:
+                        - webzone
+                        - proxy
+
+networks:
+        webzone:
+                driver: bridge
+                internal: true
+        proxy:
+                driver: bridge
+```
+
+A few changes to be noted:
+- We added networks, so we can avoid exposing our dozens of possible web servers ports on the host, they will be in their own, secluded network **webzone**. Only traefik will be able to serve as bridge to the outside (to the host and beyond).
+- We added traefik service, so It can run together with the httpd server.
+- We added httpd configuration to change the servername to our FQDN
+
+Now, we can start and scale our web servers depending on our needs
+
+```
+$ docker-compose up --scale httpd=3 -d
+WARNING: The "httpd" service specifies a port on the host. If multiple containers for this service are created on a single host, the port will clash.
+Starting httpd-service_httpd_1   ... done
+Starting httpd-service_httpd_2   ... done
+Starting httpd-service_httpd_3   ... done
+Starting httpd-service_traefik_1 ... done
+```
+And we are now able to access our website from outside
+
+![image](https://user-images.githubusercontent.com/72258375/146694753-a71ea54c-182b-47c8-a268-7a30494017e5.png)
+
+Each GET is load balanced on the 3 different containers we just spawned.
+
+Only the needed ports are opened on the host
+```
+$ netstat -tlpn
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name             
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:8080            0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -      
+```
+
+We also have access to traefik dashboard on port 8080
+
+![image](https://user-images.githubusercontent.com/72258375/146694799-44df59fa-1b25-4a0f-9582-e1d9c5725683.png)
+
+### Adding TLS and HTTPS
+
+Now that we have access on port 80, let's try to redirect on port 443 and handles everything more securely
+
+**Under construction..**
+
+## Node_exporter and Cadvisor
+
+
+## Prometheus and Grafana
 
 
 
