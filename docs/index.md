@@ -119,7 +119,7 @@ We do not want to preface the docker command with sudo, so we create a Unix grou
 
 ### Dedicated user creation
 
-We will a user named **produser** for running docker, I simply created it with useradd and added a password to it.
+We will create a user named **produser** for running docker, I simply added it with useradd and provided it with a password.
 
 The group docker is created by default now, so we just have to add the new user to the group
 
