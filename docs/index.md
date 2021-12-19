@@ -351,8 +351,11 @@ We will leave them started for the time being, but we will need to find a way to
 
 Let's now move on to setting up a proxy solution: traeffik
 
-## Traeffik
+## Traefik
 
+From its website
+> Traefik is a modern HTTP reverse proxy and load balancer that makes deploying microservices easy.
+> Traefik integrates with your existing infrastructure components (Docker, Swarm mode, Kubernetes, Marathon, Consul, Etcd, Rancher, Amazon ECS, ...) and configures itself automatically and dynamically.
 
 
 
