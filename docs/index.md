@@ -3,14 +3,19 @@
 This page will be used to record the installation of a self-hosted devops environment.
 
 The end-goal is to have an infrastructure running several services:
-- Prometheus & Grafana for monitoring purpose
-- Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each host
-- Traefik to handle routing and load-balancing
-- Web application powered by httpd
+- [x] Setup docker and docker-compose
+- [x] Web application powered by httpd
+- [ ] Traefik to handle routing and load-balancing
+- [ ] Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each host
+- [ ] Prometheus & Grafana for monitoring purpose
 
 All these applications will be running inside dockers, as to be scalable in the future
 
 It will start as a single host project and will slowly be turning into multiple-hosts
+
+## Links
+
+
 
 # Docker
 
