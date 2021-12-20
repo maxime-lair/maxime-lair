@@ -694,7 +694,7 @@ Available at http://binsh.io:36200/
 We create a **prometheus.yml** which will be the configuration, It should be static across all prometheus docker since It will define scrape_interval and targets
 
 ```
-cat prometheus.yml 
+$ cat prometheus.yml 
 # my global config
 global:
   scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
@@ -737,7 +737,7 @@ The IP for the docker job is the docker0 interface
 I'm not too happy about this as I would prefer a localhost address, but It seems we can't access those metrics from the loopback device. I need to investigate on this.
 
 ```
-ip addr show docker0
+$ ip addr show docker0
 3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
     link/ether 02:42:2f:68:96:ac brd ff:ff:ff:ff:ff:ff
     inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
@@ -799,10 +799,14 @@ We will node_exporter for collecting host metric (how is our hardware doing) and
 
 
 
-## Deploy on multi-host (kubernetes start ?)
+# Roadmap
 
+- [ ] Docker introduction
+- [ ] Ansible for scaling
+- [ ] Kubernetes / Helm
+- [ ] Terraform
+- [ ] Git CI/CD
+- [ ] Add others services (Mail, DNS, OpenVPN, Samba, rsync)
+- [ ] Start bringing chaos ([Chaos monkey](https://www.gremlin.com/chaos-monkey/))
 
-
-
-
-
+If you read this far (or just scroll down from the top in tldr fashion), I appreciate any comment. Thank you.
