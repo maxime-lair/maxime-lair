@@ -494,8 +494,6 @@ We also have access to traefik dashboard on port 8080
 
 Now that we have access on port 80, let's try to redirect on port 443 and handles everything more securely
 
-**Under construction..**
-
 We create a file hosting our TLS certificates, and we need to review its file right (or we will get a slap on the wrist later when we start traefik)
 
 ```
