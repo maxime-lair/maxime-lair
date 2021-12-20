@@ -5,7 +5,7 @@ This page will be used to record the installation of a self-hosted devops enviro
 The end-goal is to have an infrastructure running several services:
 - [x] Setup docker and docker-compose
 - [x] Web application powered by httpd
-- [ ] Traefik to handle routing and load-balancing
+- [x] Traefik to handle routing and load-balancing
 - [ ] Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each host
 - [ ] Prometheus & Grafana for monitoring purpose
 
@@ -26,8 +26,8 @@ It will start as a single host project and will slowly be turning into multiple-
 3. [traefik](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#traefik)
 	- [Adding load balancer and reverse-proxy](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-load-balancer-and-reverse-proxy)
 	- [Adding TLS and HTTPS](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-TLS-and-HTTPS)
-4. Node_exporter & Cadvisor
-5. Prometheus & Grafana
+4. Prometheus & Grafana
+5. Node_exporter & Cadvisor
 
 # Docker
 
