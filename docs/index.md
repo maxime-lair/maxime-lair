@@ -683,14 +683,113 @@ Now that we added our proxy, we are able to have HTTPS content on our docker con
 
 We want to install Prometheus and Grafana, they will be our monitoring stronghold to retrieve and analyze any collected metrics.
 
+### Prometheus installation
+
 Prometheus docker: 
 - https://docs.docker.com/config/daemon/prometheus/
 - https://hub.docker.com/r/prom/prometheus
+
+Available at http://binsh.io:36200/
+
+We create a **prometheus.yml** which will be the configuration, It should be static across all prometheus docker since It will define scrape_interval and targets
+
+```
+cat prometheus.yml 
+# my global config
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+      monitor: 'binsh-monitor'
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first.rules"
+  # - "second.rules"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'docker'
+         # metrics_path defaults to '/metrics'
+         # scheme defaults to 'http'.
+
+    static_configs:
+      - targets: ['172.17.0.1:9323']
+```
+
+**Note** Experimental test: docker daemon can now export metrics onto Prometheus
+
+The IP for the docker job is the docker0 interface
+I'm not too happy about this as I would prefer a localhost address, but It seems we can't access those metrics from the loopback device. I need to investigate on this.
+
+```
+ip addr show docker0
+3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:2f:68:96:ac brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+```
+
+You have to amend (or create if not existing) **/etc/docker/daemon.json** and add
+
+```
+$ cat /etc/docker/daemon.json
+{
+  "metrics-addr" : "0.0.0.0:9323",
+  "experimental" : true
+}
+```
+
+We have to bind it on 0.0.0.0 (any addr) because prometheus might need to access it from outside, but this could be a security issue and we will tackle it later.
+
+Then we have to restart the docker service (be careful of any docker running)
+
+```
+$ sudo systemctl daemon-reload                         
+$ sudo systemctl restart docker
+ ```
+
+We will later on check on the differences between cadvisor metrics and the one retrieved from the daemon itself.
+
+
+### Grafana installation
 
 Grafana docker:
 - https://grafana.com/docs/grafana/latest/installation/docker/
 - https://hub.docker.com/r/grafana/grafana
 
+Available at http://binsh.io:36300/
+
+No need to create anything except a dedicated volume as to not lose our dashboard if we restart the container
+
+
+### Networks and routing
+
+- Put prometheus/Grafana in their own network space
+- Put them behind Traefik and add basicAuth
+- Separate Traefik into its own docker-compose
+
+### Clean-up
+
+We now have working grafana/prometheus behind Traefik with TLS/Auth working, and 3 units that we can deploy on their own:
+- Traefik for routing
+- Grafana/Prometheus
+- Httpd server (we could add a database later)
+
+Let's try to clean each file so we can have them scalable on a multi-host (variables)
 
 ## Node_exporter and Cadvisor
 
