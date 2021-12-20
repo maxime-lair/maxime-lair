@@ -496,10 +496,215 @@ Now that we have access on port 80, let's try to redirect on port 443 and handle
 
 **Under construction..**
 
-## Node_exporter and Cadvisor
+We create a file hosting our TLS certificates, and we need to review its file right (or we will get a slap on the wrist later when we start traefik)
 
+```
+$ touch acme.json
+$ chmod 600 acme.json
+```
+
+This file will hold the TLS certificates created by __Let's encrypt__
+
+First, we will secure our __docker-compose.yml__ by activating the secure api, removing the dashboard port, and sharing the acme.json file
+
+We also added port 443 for HTTPS, since we will be redirecting all our traffic onto it. We want to be [HSTS](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Strict_Transport_Security_Cheat_Sheet.html) approved !
+
+```
+$ cat docker-compose.yml 
+version: "3.9"
+services:
+        httpd:
+                ports:
+                        - "35000-35100:80"
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+                        - ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - webzone
+        traefik:
+                image: traefik:latest
+                restart: unless-stopped
+                command: --api --providers.docker
+                ports:
+                        # The HTTP port
+                        - "80:80"
+                        - "443:443"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                        - $PWD/acme.json:/acme.json
+                networks:
+                        - webzone
+                        - proxy
+
+networks:
+        webzone:
+                driver: bridge
+                internal: true
+        proxy:
+                driver: bridge
+
+```
+
+Then we move onto our __traefik.yml__ file, we want 3 main points added:
+- Redirect all HTTP trafic (port 80) to HTTPS (port 443)
+- Secure the API (some kind of authentication required to access it)
+- Add a certificate resolver - this will handled by Let's encrypt for validating TLS certificate (not expired, right domain, can be trusted, etc.)
+
+```
+$ cat traefik.yml 
+## traefik.yml
+
+entryPoints:
+        http:
+                address: ":80"
+                http:
+                        redirections:
+                                entryPoint:
+                                        to: https
+        https:
+                address: ":443"
+
+# Docker configuration backend
+providers:
+  file:
+          filename: dynamic_conf.yml
+          watch: true
+  docker:
+          endpoint: "unix:///var/run/docker.sock"
+          exposedByDefault: false
+
+# API and dashboard configuration
+api:
+        dashboard: true
+
+certificatesResolvers:
+        letsencrypt:
+                acme:
+                        email: <DEDICATED EMAIL ADDRESS>@gmail.com
+                        storage: acme.json
+                        httpChallenge:
+                                entryPoint: http
+```
+
+**Note** You have to create a mail address to receive importants messages (expiration, etc.) when activating TLS, [see](https://letsencrypt.org/docs/expiration-emails/). For now this address is external, but we would want to have a self-hosted mail server with MX/SPF/DKIM/DMARC protection
+
+Now, onto the interesting part, we have multiple things to do:
+- Authenticate user trying to connect to Traefik API
+- Route users onto the dashboard or onto the web server depending on their requests (since we removed port 8080)
+- Make sure they are using HTTPS
+
+This is all done through routers and middlewares on Traefik, routers will catch requests depending on their __rule__ to then direct them onto a list of __middlewares__ (which can authenticate, redirect, add headers, etc.), and if they managed to get through, route them onto a __service__
+
+The logic will always be in Traefik-v2 : EntryPoints -> routers -> middlewares -> services -> providers
+
+For authentication, we will use [BasicAuth](https://doc.traefik.io/traefik/v2.0/middlewares/basicauth/) with user:pass logic, although we could have used any external authentication services (AWS, etc.)
+
+**Note** I had some trouble when generating them on my Centos8 with __htpasswd__ as they were not recognized in Traefik. I had to use an online generator.
+
+You can use this command to generate your own [user/password](https://xkcd.com/936/)
+```
+$ echo $(htpasswd -nb xkcd <VERY SECURE PASSWORD>) | sed -e s/\\$/\\$\\$/g
+xkcd:$$apr1$$<VERY SECURE HASH>
+```
+
+Now we can write our __dynamic_conf.yml__
+
+```
+$ cat dynamic_conf.yml 
+http:
+    routers:
+        http_router:
+            rule: "Host(`binsh.io`)"
+            service: web
+            middlewares:
+                    - traefik-https-redirect
+            tls:
+                    certResolver: letsencrypt
+        traefik_router:
+            entrypoints: http
+            rule: "Host(`traefik.binsh.io`)"
+            service: api@internal
+            middlewares: 
+                - traefik-https-redirect
+        traefik_secure_router:
+            entrypoints: https
+            rule: "Host(`traefik.binsh.io`)"
+            middlewares: 
+                - traefik-auth
+            tls:
+                    certResolver: letsencrypt
+            service: api@internal
+        
+    services:
+        web:
+            loadBalancer:
+                servers:
+                    - url: "http://httpd/"
+
+
+    middlewares:
+            traefik-auth:
+                    basicAuth:
+                            users: 
+                                - "<USER>:$apr1$<PASS HASH>"
+            traefik-https-redirect:
+                    redirectScheme:
+                            scheme: https
+                            permanent: true
+```
+
+We use a subdomain to redirect users going for web content (top domain binsh.io) and the ones going for Traefik dashboard (traefik.binsh.io)
+
+All traffic is now forced into HTTPS with a valid certificate (which will be automatically renewed by Traefik), and we only force an authentication for users going onto Traefik dashboard
+
+We can now start our docker-compose to finish adding HTTPS and auth to our infrastructure
+```
+$ docker-compose up -d --scale httpd=3
+Starting httpd-service_traefik_1 ... 
+Starting httpd-service_traefik_1 ... done
+Starting httpd-service_httpd_1   ... done
+Creating httpd-service_httpd_2   ... done
+Creating httpd-service_httpd_3   ... done
+```
+
+HTTPS on binsh.io:
+![image](https://user-images.githubusercontent.com/72258375/146785667-71cc256b-aa69-496c-b026-99b84485f3cd.png)
+
+And on traefik.binsh.io (after basicAuth):
+![image](https://user-images.githubusercontent.com/72258375/146786440-28a8859e-1460-4aa3-937a-c9f09eab7776.png)
+
+Now that we added our proxy, we are able to have HTTPS content on our docker container, our infrastructure could be running live. But we need a way to monitor this host. Imagine we run into a disk failure, we need to have metrics on how It happened, and be alerted when It happens (or before even).
 
 ## Prometheus and Grafana
+
+** Under construction ** 
+
+We want to install Prometheus and Grafana, they will be our monitoring stronghold to retrieve and analyze any collected metrics.
+
+Prometheus docker: 
+- https://docs.docker.com/config/daemon/prometheus/
+- https://hub.docker.com/r/prom/prometheus
+
+Grafana docker:
+- https://grafana.com/docs/grafana/latest/installation/docker/
+- https://hub.docker.com/r/grafana/grafana
+
+
+## Node_exporter and Cadvisor
+
+Now that we have somewhere to send our monitoring onto, we can start collecting informations across the board
+
+We will node_exporter for collecting host metric (how is our hardware doing) and Cadvisor for docker metrics (are our containers running into any bottlenecks)
+
+
+
+## Deploy on multi-host (kubernetes start ?)
+
+
 
 
 
