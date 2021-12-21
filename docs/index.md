@@ -679,8 +679,6 @@ Now that we added our proxy, we are able to have HTTPS content on our docker con
 
 ## Prometheus and Grafana
 
-** Under construction ** 
-
 We want to install Prometheus and Grafana, they will be our monitoring stronghold to retrieve and analyze any collected metrics.
 
 We will not bother with high-availability/fault-tolerant issues for now, this is a subject on which I'm not finding any design patterns. Only answer I got was "Use sharding and only one prometheus server per datacenter", but It doesn't cover any case on when the prometheus server has an issue (hardware failure or else).
@@ -932,18 +930,25 @@ We currently have this setup:
 
 Our end-goal is to have something cleaner like this:
 
+![image](https://user-images.githubusercontent.com/72258375/146991771-bee6880c-6d7b-48ac-9160-cb40261cdbe4.png)
 
+So we will need to perform these two steps:
 
+- Separate Traefik into its own docker-compose and add rules for docker/prometheus routing
 - Put prometheus/Grafana in their own network space
-- Put them behind Traefik and add basicAuth
-- Separate Traefik into its own docker-compose
+
+** WORK UNDER CONSTRUCTION **
+
+
 
 ### Clean-up
 
 We now have working grafana/prometheus behind Traefik with TLS/Auth working, and 3 units that we can deploy on their own:
 - Traefik for routing
 - Grafana/Prometheus
-- Httpd server (we could add a database later)
+- Httpd server
+
+This setup works for the binsh.io domain, but let's say we want to change this domain, how we can do it seamlessly ?
 
 Let's try to clean each file so we can have them scalable on a multi-host (variables)
 
