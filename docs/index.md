@@ -683,13 +683,23 @@ Now that we added our proxy, we are able to have HTTPS content on our docker con
 
 We want to install Prometheus and Grafana, they will be our monitoring stronghold to retrieve and analyze any collected metrics.
 
+We will not bother with high-availability/fault-tolerant issues for now, this is a subject on which I'm not finding any design patterns. Only answer I got was "Use sharding and only one prometheus server per datacenter", but It doesn't cover any case on when the prometheus server has an issue (hardware failure or else).
+
 ### Prometheus installation
 
-Prometheus docker: 
+> Prometheus is an open-source systems monitoring and alerting toolkit originally built at SoundCloud in 2012. Prometheus collects and stores its metrics as time series data, i.e. metrics information is stored with the timestamp at which it was recorded, alongside optional key-value pairs called labels.
+
+[Why use time series collection ?](https://sre.google/sre-book/production-environment/)
+
+Typically, metrics are best used for monitoring, profiling, and alerting. The efficiency of summarizing data makes them great for monitoring and performance profiling because you can economically store long retention periods of data, giving you dashboards that look back over time. They are also great for alerting because they are fast and can trigger notifications almost instantaneously without the need for expensive queries. Metrics represent roughly 90% of the monitoring workload. [source](https://www.splunk.com/en_us/blog/devops/metric-log-monitoring-really-need.html)
+
+Later on, we will think on adding a log-based monitoring (like Filebeat or else) and trace-based monitoring (like Jaeger).
+
+Again, we have a provided prometheus docker that we can use out-of-the-box:
 - https://docs.docker.com/config/daemon/prometheus/
 - https://hub.docker.com/r/prom/prometheus
 
-Available at http://binsh.io:36200/
+Our endgoal is to have a prometheus service available which we can access on __prometheus.binsh.io__
 
 We create a **prometheus.yml** which will be the configuration, It should be static across all prometheus docker since It will define scrape_interval and targets
 
@@ -734,7 +744,6 @@ scrape_configs:
 **Note** Experimental test: docker daemon can now export metrics onto Prometheus
 
 The IP for the docker job is the docker0 interface
-I'm not too happy about this as I would prefer a localhost address, but It seems we can't access those metrics from the loopback device. I need to investigate on this.
 
 ```
 $ ip addr show docker0
@@ -742,6 +751,8 @@ $ ip addr show docker0
     link/ether 02:42:2f:68:96:ac brd ff:ff:ff:ff:ff:ff
     inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
 ```
+
+Funny thing is : [the documentation recommends using localhost](https://docs.docker.com/config/daemon/prometheus/), but we can't access those metrics from the loopback device when running prometheus inside docker. Even if we try to expose the port on the host, It does not work.
 
 You have to amend (or create if not existing) **/etc/docker/daemon.json** and add
 
@@ -755,7 +766,7 @@ $ cat /etc/docker/daemon.json
 
 We have to bind it on 0.0.0.0 (any addr) because prometheus might need to access it from outside, but this could be a security issue and we will tackle it later.
 
-Then we have to restart the docker service (be careful of any docker running)
+Then we have to restart the docker service (be careful of shutting down any docker running)
 
 ```
 $ sudo systemctl daemon-reload                         
@@ -764,19 +775,164 @@ $ sudo systemctl restart docker
 
 We will later on check on the differences between cadvisor metrics and the one retrieved from the daemon itself.
 
+For now, we only bother about monitoring our single host with a static configuration. Later on, when we scale to multiple hosts, we will have to dynamically update the host list to search for them. It can be done with DNS, AWS, IP, file based configuration.
 
 ### Grafana installation
+
+> Grafana open source is open source visualization and analytics software. It allows you to query, visualize, alert on, and explore your metrics, logs, and traces no matter where they are stored. It provides you with tools to turn your time-series database (TSDB) data into insightful graphs and visualizations.
+
+The project has since then branched into multiples components, with Grafana dashboard (the one we are using), Loki (Prometheus but for logs) and Tempo (for correlation)
 
 Grafana docker:
 - https://grafana.com/docs/grafana/latest/installation/docker/
 - https://hub.docker.com/r/grafana/grafana
 
-Available at http://binsh.io:36300/
+Our endgoal is to have a grafana service available at __grafana.binsh.io__ and able to reach prometheus service
 
-No need to create anything except a dedicated volume as to not lose our dashboard if we restart the container
+Configuration-wise, we want to amend a few parameters, 
 
+Normally, you could retrieve a base file with this type of command:
+```
+docker run --rm grafana/grafana-oss cat /etc/grafana/grafana.ini > base-custom.ini
+```
+
+But the way this image was made is .. with never-ending script waiting for logs, so the container can never stop itself with __--rm__ argument
+
+So we have to improvize by creating the container, executing a command inside it, then shutting it down, use it at your own risk:
+```
+docker run -d grafana/grafana | xargs -I % sh -c 'docker exec % cat /etc/grafana/grafana.ini > base-grafana.ini; docker stop %'
+```
+
+It creates a new file __base-grafana.ini__ with the default grafana configuration.
+
+The file is 1k lines long, but everything has defaults so we will just leave what's important to us in case we need to amend them.
+
+Then we create our target __grafana.ini__ that will be used on the grafana container spawned by docker-compose
+
+```
+$ cat grafana.ini
+################################### General ###################################
+app_mode = production
+
+instance_name = grafana.binsh.io
+
+#################################### Paths ####################################
+[paths]
+# Directory where grafana can store logs
+;logs = /var/log/grafana
+
+# Directory where grafana will automatically scan and look for plugins
+;plugins = /var/lib/grafana/plugins
+
+# folder that contains provisioning config files that grafana will apply on startup and while running.
+;provisioning = conf/provisioning
+
+#################################### Server ####################################
+[server]
+# The http port  to use
+;http_port = 3000
+
+#################################### Analytics ####################################
+[analytics]
+reporting_enabled = false
+check_for_updates = false
+
+#################################### Security ####################################
+[security]
+disable_initial_admin_creation = true
+admin_user = <VERY SECURE USER>
+admin_password = <VERY SECURE PASSWORD>
+
+#################################### Users ###############################
+[users]
+allow_sign_up = false
+
+#################################### Basic Auth ##########################
+[auth.basic]
+;enabled = true
+
+```
+
+### Docker-compose file
+
+Now that we have our grafana and prometheus configurations, we can create our docker-compose file
+
+```
+$ cat docker-compose.yml
+version: "3.9"
+services:
+        prometheus:
+                ports:
+                        - "36200:9090"
+                image: "prom/prometheus"
+                volumes:
+                        - prometheus-storage:/prometheus
+                        - $PWD/prometheus.yml:/etc/prometheus/prometheus.yml
+                networks:
+                        - proxy
+        grafana:
+                ports:
+                        - "36300:3000"
+                image: "grafana/grafana-oss"
+                volumes:
+                        - grafana-storage:/var/lib/grafana
+                        - $PWD/grafana.ini:/etc/grafana/grafana.ini
+                depends_on:
+                        - "prometheus"
+                networks:
+                        - proxy
+
+networks:
+        proxy:
+                driver: bridge
+
+
+volumes:
+        grafana-storage:
+        prometheus-storage:
+```
+
+For now we will let them on the host network, later on we will have them behind Traefik in their own secluded network.
+
+One part stands out : We added two volumes so we do not lose any data in case any container crash
+- On grafana It saves us any dashboard/user we created
+- On prometheus It saves all metrics retrieved from the host, but I think prometheus keeps anything under 2 hours in memory and only writes it on disk If it is any older, so we would lose any recent data (We will need data replication to avoid this) 
+
+Also we wait on prometheus to start for spinning up Grafana, as the dashboard would be useless without any data to pull from.
+
+### Services configuration
+
+Now all we need to do is check our service health, for now they are not behind any proxy, so we can access them on their port directly (ie. :36200/36300)
+
+Let's check Prometheus, are our targets defined in our configuration able to spit up metrics?
+
+![image](https://user-images.githubusercontent.com/72258375/146982871-2c00b65a-05e4-4888-b384-7b0f4398c41c.png)
+
+Now can our Grafana retrieve those Prometheus metrics ?
+
+We connect to grafana and add our datasource:
+
+![image](https://user-images.githubusercontent.com/72258375/146982447-8b41f70b-e8e1-4bca-a659-724bfa8b8221.png)
+
+And It works ! We have our (already provided) dashboard with metrics:
+
+![image](https://user-images.githubusercontent.com/72258375/146982682-a0e36452-0084-4948-bd31-929080318930.png)
+
+We could create our own dashboard and even our own metrics once we get up and running, but for now we will just use already-made dashboard.
 
 ### Networks and routing
+
+Now that prometheus and grafana are running well in their own containers, we can move onto securing the stack
+
+Let's start by questionning ourselves on what we want to expose.
+
+We currently have this setup:
+
+![image](https://user-images.githubusercontent.com/72258375/146987420-fa4c338b-6a11-498d-a784-5cfdfe2e0018.png)
+
+Our end-goal is to have something cleaner like this:
+
+
 
 - Put prometheus/Grafana in their own network space
 - Put them behind Traefik and add basicAuth
