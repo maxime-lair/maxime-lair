@@ -930,7 +930,7 @@ We currently have this setup:
 
 Our end-goal is to have something cleaner like this:
 
-![image](https://user-images.githubusercontent.com/72258375/146991771-bee6880c-6d7b-48ac-9160-cb40261cdbe4.png)
+![image](https://user-images.githubusercontent.com/72258375/146994602-7e22b07b-2537-4a4c-a3d1-3d6fa0127f4e.png)
 
 So we will need to perform these two steps:
 
