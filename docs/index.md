@@ -6,8 +6,9 @@ The end-goal is to have an infrastructure running several services:
 - [x] Setup docker and docker-compose
 - [x] Web application powered by httpd
 - [x] Traefik to handle routing and load-balancing
-- [ ] Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each host
 - [ ] Prometheus & Grafana for monitoring purpose
+- [ ] Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each host
+
 
 All these applications will be running inside dockers, as to be scalable in the future
 
@@ -27,7 +28,13 @@ It will start as a single host project and will slowly be turning into multiple-
 	- [Adding load balancer and reverse-proxy](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-load-balancer-and-reverse-proxy)
 	- [Adding TLS and HTTPS](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-TLS-and-HTTPS)
 4. Prometheus & Grafana
-5. Node_exporter & Cadvisor
+	- [Prometheus installation](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Prometheus-installation)
+	- [Grafana installation](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Grafana-installation)
+	- [Docker-compose file](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Docker-compose-file)
+	- [Services configuration](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Services-configuration)
+	- [Networks and routing](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Networks-and-routing)
+	- [Clean-up static names](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Clean-up-static-names)
+6. Node_exporter & Cadvisor
 
 # Docker
 
@@ -937,11 +944,341 @@ So we will need to perform these two steps:
 - Separate Traefik into its own docker-compose and add rules for docker/prometheus routing
 - Put prometheus/Grafana in their own network space
 
-** WORK UNDER CONSTRUCTION **
+#### Separate Traefik
+
+First, let's split our current docker-compose for httpd-service.
+
+Currently, we have:
+```
+cat docker-compose.yml
+version: "3.9"
+services:
+        httpd:
+		ports: 35000-35100:80
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+                        - ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - webzone
+        traefik:
+                image: traefik:latest
+                restart: unless-stopped
+                command: --api --providers.docker
+                ports:
+                        # The HTTP port
+                        - "80:80"
+                        - "443:443"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                        - $PWD/acme.json:/acme.json
+                networks:
+                        - webzone
+                        - proxy
+
+networks:
+        webzone:
+                driver: bridge
+                internal: true
+        proxy:
+                driver: bridge
+```
+
+First, we dont have to set ports nor networks on httpd container, It wasn't necessary as traefik and httpd are sharing the same network (http-service_default), we can remove it.
+
+From docker-compose docs on networks:
+> By default Compose sets up a single network for your app. Each container for a service joins the default network and is both reachable by other containers on that network, and discoverable by them at a hostname identical to the container name.
+
+Then we can remove the entire traefik part, It will be moved to its own docker-compose file in another directory
+
+Let's create this directory before we proceed any further
+
+```
+$ mkdir traefik-service
+$ tree .
+.
+├── httpd-service
+│   ├── acme.json
+│   ├── binsh
+│   │   ├── index.html
+│   ├── docker-compose.yml
+│   ├── dynamic_conf.yml
+│   ├── my-httpd.conf
+│   └── traefik.yml
+├── monitoring-service
+│   ├── base-grafana.ini
+│   ├── docker-compose.yml
+│   ├── grafana_data
+│   ├── grafana.ini
+│   ├── prometheus_data
+│   └── prometheus.yml
+└── traefik-service
+```
+
+We simply copy __docker-compose.yml__ and traefik related files located in httpd-service into traefik-service (so we will not have to retype everything once we get there)
+
+```
+$ cp httpd-service/docker-compose.yml traefik-service 
+$ cp httpd-service/dynamic_conf.yml traefik-service  
+$ cp httpd-service/traefik.yml traefik-service     
+$ tree traefik-service 
+traefik-service
+├── docker-compose.yml
+├── dynamic_conf.yml
+└── traefik.yml
+└── acme.json
+```
+
+Now we can modify our docker-compose in httpd-service directory
+
+```
+$ cat docker-compose.yml
+version: "3.9"
+services:
+        httpd:
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+                        - ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - traefik
+                        - default
+networks:
+        traefik:
+                external: true
+                name: traefik-service_default
+```
+
+Here we only have our httpd server running. We could use a single command line instead of using docker-compose, but if we ever need to add a database or more, we can easily add it.
+
+One inconvenience is we have to join Traefik network which will be started through another docker-compose, and we run into ["chicken or egg"](https://en.wikipedia.org/wiki/Chicken_or_the_egg) issue. We can't start our docker-compose unless traefik network is up, this is usually fine as we can't access the server anyway if our proxy is not up, but this is still a hard dependency which will require scheduling
+
+We could have made Traefik join httpd network instead, but If we think about it, scaling-wise, this is a bad idea. We do not want to amend Traefik docker-compose file everytime we will add or remove a service like httpd (as It will have to update its network every time).
+
+Now let's set up **traefik-service** (that we previously copied files onto)
+
+We only have to amend our docker-compose file by removing the httpd:
+
+```
+$ cat docker-compose.yml 
+version: "3.9"
+services:
+        traefik:
+                image: traefik:latest
+                restart: unless-stopped
+                command: --api --providers.docker
+                ports:
+                        - "80:80"
+                        - "443:443"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                        - $PWD/acme.json:/acme.json
+```
+
+Let's clean-up any networks remnants and start traefik
+
+```
+$ docker network prune
+$ docker-compose up -d                
+Creating network "traefik-service_default" with the default driver
+Creating traefik-service_traefik_1 ... done
+```
+
+Then we start our httpd containers
+
+```
+$ docker-compose up -d --scale httpd=3   
+Creating network "httpd-service_default" with the default driver
+Creating httpd-service_httpd_1 ... done
+Creating httpd-service_httpd_2 ... done
+Creating httpd-service_httpd_3 ... done
+```
+
+And we test web access (either by browser or command line):
+
+```
+$ curl -IL http://binsh.io
+HTTP/1.1 308 Permanent Redirect
+Location: https://binsh.io/
+
+HTTP/2 200 
+
+$ curl -IL http://traefik.binsh.io
+HTTP/1.1 308 Permanent Redirect
+Location: https://traefik.binsh.io/
+
+HTTP/2 401 
+www-authenticate: Basic realm="traefik"
+```
+
+Both routes are working as expected (redirection from http to https and basic-auth on Traefik dashboard), so we can move on the next part
+
+#### Add prometheus and grafana logic for Traefik routing
+
+Let's add prometheus and grafana routing on Traefik configuration now !
+
+We don't have much to do as we already did it for binsh.io
+
+First we create two DNS records, we could use A (IP <-> FQDN) or CNAME (FQDN <-> FQDN) types here, but I will prefer using CNAME for now as they are hosted on the same IP (saves cost and time for your computer, you are welcome)
+
+Here we use __nslookup__ to check DNS records, It's packaged in bind-utils on Centos8 (not installed by default)
+
+```
+$ nslookup prometheus.binsh.io
+Non-authoritative answer:
+prometheus.binsh.io     canonical name = binsh.io.
+Name:   binsh.io
+
+$ nslookup grafana.binsh.io   
+Non-authoritative answer:
+grafana.binsh.io        canonical name = binsh.io.
+Name:   binsh.io
+```
+
+And we get the resulting dynamic configuration for Traefik:
+
+```
+$ cat dynamic_conf.yml 
+http:
+        routers:
+                http_router:
+                        rule: "Host(`binsh.io`)"
+                        service: web
+                        middlewares:
+                                - traefik-https-redirect
+                        tls:
+                                certResolver: letsencrypt
+                grafana_router:
+                        rule: "Host(`grafana.binsh.io`)"
+                        service: grafana
+                        middlewares:
+                                - traefik-https-redirect
+                                - traefik-auth
+                        tls:
+                                certResolver: letsencrypt
+                prometheus_router:
+                        rule: "Host(`prometheus.binsh.io`)"
+                        service: prometheus
+                        middlewares:
+                                - traefik-https-redirect
+                                - traefik-auth
+                        tls:
+                                certResolver: letsencrypt
+                traefik_router:
+                        entrypoints: http
+                        rule: "Host(`traefik.binsh.io`)"
+                        service: api@internal
+                        middlewares: 
+                                - traefik-https-redirect
+                traefik_secure_router:
+                        entrypoints: https
+                        rule: "Host(`traefik.binsh.io`)"
+                        middlewares: 
+                                - traefik-auth
+                        tls:
+                                certResolver: letsencrypt
+                        service: api@internal
+        
+        services:
+                web:
+                        loadBalancer:
+                                servers:
+                                        - url: "http://httpd/"
+                grafana:
+                        loadBalancer:
+                                servers:
+                                        - url: "http://grafana:3000/"
+                prometheus:
+                        loadBalancer:
+                                servers:
+                                        - url: "http://prometheus:9090/"
+
+        middlewares:
+                traefik-auth:
+                        basicAuth:
+                                users: 
+                                        - "<USER>:$apr1$<PASSWORD VERY SECURE>"
+                traefik-https-redirect:
+                        redirectScheme:
+                                scheme: https
+                                permanent: true
+```
+
+We added two routers and services, one for Grafana on port 3000 and one for Prometheus on port 9090. Unfortunately Traefik is unable to find these port dynamically like he did for httpd. I guess we would have to change prom/grafana default port to 80 and It could work without indicating ports, but why bother.
+
+We also added HTTPS redirection and basic-auth on both services, because why not.
+
+Now we will be able to access prometheus and grafana through Traefik as long as they are on the same docker network.
+
+#### Put prometheus and grafana behind Traefik
+
+Now we can move Grafana and Prometheus into their own network space:
+
+The resulting docker-compose file:
+
+```
+$ cat docker-compose.yml 
+version: "3.9"
+services:
+        prometheus:
+                image: "prom/prometheus"
+                volumes:
+                        - prometheus-storage:/prometheus
+                        - $PWD/prometheus.yml:/etc/prometheus/prometheus.yml
+                networks:
+                        - traefik
+        grafana:
+                image: "grafana/grafana-oss"
+                volumes:
+                        - grafana-storage:/var/lib/grafana
+                        - $PWD/grafana.ini:/etc/grafana/grafana.ini
+                depends_on:
+                        - "prometheus"
+                networks:
+                        - traefik
+
+networks:
+        traefik:
+                external: true
+                name: traefik-service_default
+
+volumes:
+        grafana-storage:
+        prometheus-storage:
+```
+
+We can remove any port exposure/mapping, as they will connect to traefik network. We could have created an internal network for prometheus -> grafana traffic but It would not add much value.
+
+Now let's try to start our prometheus/grafana services and test them through Traefik
+
+Can we still access those services through our custom ports (36200/36300) ? No we can't since we removed the exposure from the docker-compose file
+
+```
+$ curl http://binsh.io:36200
+curl: (7) Failed to connect to binsh.io port 36200: Connection refused
+$ curl http://binsh.io:36300
+curl: (7) Failed to connect to binsh.io port 36300: Connection refused
+```
+
+Can we access them through Traefik ? Yes, and It even redirects to https with a valid TLS certificate and basic authentication, nice !
+
+![image](https://user-images.githubusercontent.com/72258375/147015794-67f4cc24-6e8a-4acb-a32e-176dc5c04e41.png)
+
+![image](https://user-images.githubusercontent.com/72258375/147015819-680ad2f1-1020-4d26-9a13-b2e8713c36f8.png)
 
 
+We reached our goal, and even removed any left-over ports that were not useful, so we can update our architecture as such:
 
-### Clean-up
+![image](https://user-images.githubusercontent.com/72258375/147016044-b5fb7dcb-7bed-40ad-850b-871795c647ba.png)
+
+
+### Clean-up static names
 
 We now have working grafana/prometheus behind Traefik with TLS/Auth working, and 3 units that we can deploy on their own:
 - Traefik for routing
@@ -951,6 +1288,30 @@ We now have working grafana/prometheus behind Traefik with TLS/Auth working, and
 This setup works for the binsh.io domain, but let's say we want to change this domain, how we can do it seamlessly ?
 
 Let's try to clean each file so we can have them scalable on a multi-host (variables)
+
+** UNDER CONSTRUCTION ** 
+
+We currently have these directories:
+
+```
+├── httpd-service
+│   ├── binsh
+│   │   ├── index.html
+│   ├── docker-compose.yml
+│   └── my-httpd.conf
+├── monitoring-service
+│   ├── base-grafana.ini
+│   ├── docker-compose.yml
+│   ├── grafana_data
+│   ├── grafana.ini
+│   ├── prometheus_data
+│   └── prometheus.yml
+└── traefik-service
+    ├── acme.json
+    ├── docker-compose.yml
+    ├── dynamic_conf.yml
+    └── traefik.yml
+```
 
 ## Node_exporter and Cadvisor
 
