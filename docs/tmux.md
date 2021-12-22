@@ -28,6 +28,12 @@ ctrl + b + arrow_key          next pane
 
 For more, check out the [cheatsheet](https://tmuxcheatsheet.com/)
 
+Let's create (or add) to __~/.tmux.conf__ the ability to scroll up/down on our pane (otherwise we will be unable to):
+```
+$ cat ~/.tmux.conf
+set -g mouse on
+```
+
 ## Tmuxinator
 
 Since we will be repeating the same command to create session/window/pane, let's use a template script called tmuxinator
