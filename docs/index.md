@@ -33,7 +33,6 @@ It will start as a single host project and will slowly be turning into multiple-
 	- [Docker-compose file](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Docker-compose-file)
 	- [Services configuration](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Services-configuration)
 	- [Networks and routing](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Networks-and-routing)
-	- [Clean-up static names](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Clean-up-static-names)
 6. Node_exporter & Cadvisor
 
 # Docker
@@ -1278,47 +1277,23 @@ We reached our goal, and even removed any left-over ports that were not useful, 
 ![image](https://user-images.githubusercontent.com/72258375/147016044-b5fb7dcb-7bed-40ad-850b-871795c647ba.png)
 
 
-### Clean-up static names
-
-We now have working grafana/prometheus behind Traefik with TLS/Auth working, and 3 units that we can deploy on their own:
-- Traefik for routing
-- Grafana/Prometheus
-- Httpd server
-
-This setup works for the binsh.io domain, but let's say we want to change this domain, how we can do it seamlessly ?
-
-Let's try to clean each file so we can have them scalable on a multi-host (variables)
-
-** UNDER CONSTRUCTION ** 
-
-We currently have these directories:
-
-```
-├── httpd-service
-│   ├── binsh
-│   │   ├── index.html
-│   ├── docker-compose.yml
-│   └── my-httpd.conf
-├── monitoring-service
-│   ├── base-grafana.ini
-│   ├── docker-compose.yml
-│   ├── grafana_data
-│   ├── grafana.ini
-│   ├── prometheus_data
-│   └── prometheus.yml
-└── traefik-service
-    ├── acme.json
-    ├── docker-compose.yml
-    ├── dynamic_conf.yml
-    └── traefik.yml
-```
-
 ## Node_exporter and Cadvisor
 
 Now that we have somewhere to send our monitoring onto, we can start collecting informations across the board
 
 We will node_exporter for collecting host metric (how is our hardware doing) and Cadvisor for docker metrics (are our containers running into any bottlenecks)
 
+https://hub.docker.com/r/prom/node-exporter
+https://hub.docker.com/r/google/cadvisor/
+
+We create a new directory where we can begin our docker-compose file
+
+```
+$ cat agent-monitoring-service
+$ touch docker-compose.yml
+```
+
+** UNDER CONSTRUCTION **
 
 
 # Roadmap
