@@ -27,7 +27,7 @@ It will start as a single host project and will slowly be turning into multiple-
 3. [traefik](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#traefik)
 	- [Adding load balancer and reverse-proxy](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-load-balancer-and-reverse-proxy)
 	- [Adding TLS and HTTPS](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-TLS-and-HTTPS)
-4. Prometheus & Grafana
+4. [Prometheus & Grafana](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Prometheus-&-Grafana)
 	- [Prometheus installation](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Prometheus-installation)
 	- [Grafana installation](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Grafana-installation)
 	- [Docker-compose file](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Docker-compose-file)
