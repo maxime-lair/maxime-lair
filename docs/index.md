@@ -347,7 +347,7 @@ tcp        0      0 0.0.0.0:35034           0.0.0.0:*               LISTEN      
 
 Sure enough, our web servers are up and running, able to deliver the web pages on port 35xxx
 
-We have some warnings at the web server start-up because we did not change the ServerName in the httpd configuration, as the process is unsure of the correct IP It is being hosted on. When we get our proxy running, we will be able to update this to our FQDN binsh.io
+If you check httpd logs, we notice some warnings at the web server start-up because we did not change the ServerName in the httpd configuration, as the process is unsure of the correct IP It is being hosted on. When we get our proxy running, we will be able to update this to our FQDN binsh.io
 
 If you want to start your container in the background, you can add **-d** argument on the start
 
@@ -356,9 +356,9 @@ $ docker-compose up -d
 Starting httpd-service_web ... done
 ```
 
-But as per the warning said, we are now running into an issue: how to load-balance any requests made to binsh.io on port 80 to the different container available on port 35xxx ? We could use nginx, but It isn't able to tell dynamically which ports/containers are up
+But as for the docker warning, we now have an issue on our hands: how to load-balance any requests made to binsh.io on port 80 to the different web servers available on port 35xxx ? We could use Nginx, but we would have to manually update its configuration everytime we remove or add a container.
 
-Let's now move on to setting up a dynamic proxy solution: traefik
+Let's try to use a new proxy solution called __Traefik__
 
 ## Traefik
 
@@ -403,7 +403,7 @@ We ask to listen on port 80 for http and https for 443, the usual.
 Then we provide him a dynamic configuration file, that we will explain later, we want to keep watching this file in case of update so It can be applied live.
 Then we tell him to listen for any new containers on the host, as we want to monitor/route onto them
 
-Lastly, we expose the api, in an insecure way for now, we will add TLS/HTTPS later
+Lastly, we expose the API, in an insecure way for now, we will add TLS/HTTPS later
 
 We create our **dynamic_conf.yml** file
 
@@ -422,7 +422,7 @@ http:
 
 Here we provide a simple rule for routing: if we receive requests for our FQDN **binsh.io**, we load balance it on any servers responding to **httpd**
 
-What is this httpd url then ? That's where trafik is nice, It will listen in the **docker-compose.yml** file (by listening on __/var/run/docker.sock__) and routes every request to binsh.io to these containers running a httpd web server. We do not need to indicate or even know the port, traefik will do it for us.
+What is this httpd url then ? Since they will be running on the same docker-compose, they will share the same default network. In this case, traefik container will be able to call up any httpd container by this url.
 
 The **docker-compose.yml** file:
 ```
