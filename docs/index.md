@@ -6,7 +6,7 @@ The end-goal is to have an infrastructure running several services:
 - [x] Setup docker and docker-compose
 - [x] Web application powered by httpd
 - [x] Traefik to handle routing and load-balancing
-- [ ] Prometheus & Grafana for monitoring purpose
+- [x] Prometheus & Grafana for monitoring purpose
 - [ ] Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each host
 
 
