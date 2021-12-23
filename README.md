@@ -1,12 +1,12 @@
 ### Journey into learning devops 👋
 
-- 🔭 I’m currently working on building docker swarm infrastructure with web hosting and monitoring
-- 🌱 I’m currently learning docker and prometheus
+- 🔭 I’m currently working on implementing an IaC
+- 🌱 I’m currently following this [roadmap](https://roadmap.sh/devops)
 
 - 📫 Shoot me a comment in any of my projects, I'm always eager to improve
-- ⚡ Fun fact: graduated in IT security, worked in production environment
+- ⚡ About me: graduated in IT security, worked in ops
 
-A lot is left for me to learn, and I'm using this place to help me write it all. I'm not expecting anyone to read me, I'm mainly doing this because I learn better when writing my findings.
+A lot is left for me to learn, and I'm using this place to help me write it all. I'm not expecting any readers, I'm mainly doing this because I learn better when writing my findings.
 
 Here is a list of some envisionned projects:
 - Docker compose/swarm on a single host
