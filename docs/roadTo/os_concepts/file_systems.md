@@ -99,7 +99,7 @@ To help us navigate through this filesystem, we can use some nice external utili
 
 ![image](https://user-images.githubusercontent.com/72258375/147480010-78787424-c548-4b2d-96d1-d8bba80f286b.png)
 
-These tools are absolutely optional, but they can help having a better top-level view of the structure.
+These tools are optional, but they can help having a better top-level view of the structure.
 
 ### Root subdirectories
 
@@ -133,38 +133,196 @@ Essential directories for booting are : _/usr_ _/boot_ _/dev_ _/etc_ _/lib_ and 
 
 Now that we know what each directory purpose is, we can take a look further into the file system. After directory comes files, so let's check each of them !
 
+Before diving deeper, we need to understand the concept of inode
+
+### Inode
+
+Linux filesystems are hard to understand, especially for a computer working with 0 and 1. How does our system understand its structure ? That's when an inode is essential, It's an index node that describes the file attributes such as the physical location on the hard drive, permission privileges, in short all the metadata that we know of a file. It is stored separately from the files themselves. Each filesystem generate its inode stable to identify each file It holds.
+
+For every file on your file system, there is an inode containing 16 KB of this file metadata. We can check this number with _df_
+
+![image](https://user-images.githubusercontent.com/72258375/147488910-2f1194fe-d31e-45aa-8698-369728712bcb.png)
+
+How do we check a file's inode ?
+
+![image](https://user-images.githubusercontent.com/72258375/147489017-08bcaeda-19b5-4daf-9c38-372a7c5d4735.png)
+
+Here we can see each file types possess an inode, even links or directory.
+
+Of course there is more advanced operations available on an Inode, but know for example that an inode structure depends on its file type, like a directory holding a list of inodes of the files It contains.
+
 ### Regular file
+
+A regular file can be created with _touch_ and have no special attributes
+
+![image](https://user-images.githubusercontent.com/72258375/147489309-59448368-1df2-483e-b0aa-a92a0b292bd5.png)
 
 ### Directory
 
+We can create a directory with _mkdir_ which can be later recognized with the attribute _d_
+
+![image](https://user-images.githubusercontent.com/72258375/147489408-28b533eb-5d8a-49ed-a725-2a7ba60faf83.png)
+
+And we can check its inode and file attribute with _stat_
+
+![image](https://user-images.githubusercontent.com/72258375/147489838-3f6f1712-3986-4a51-9054-6bc40d3d2bb6.png)
+
 ### Link
+
+Links are created with _ln_, and there is two types:
+- Hard link (default) - the new file will share the inode number with the original file
+
+It is only possible to hardlink a regular file, not a directory.
+
+![image](https://user-images.githubusercontent.com/72258375/147490072-13b1789f-ed2c-4049-85f1-4b36baf26972.png)
+
+- Symbolic ( _-s_ parameter) - It creates a new file (with its own inode) pointing to the original file address
+
+![image](https://user-images.githubusercontent.com/72258375/147490054-18696bb9-f535-4e9d-bef6-23187cd2a5f7.png)
+
+Symbolic links can be applied to all types of files.
+
+And if we try to access its contents, It makes it appear as if we are accessing the real file:
+
+![image](https://user-images.githubusercontent.com/72258375/147490220-5603a7b4-8a8c-473c-9f1c-b8ec24ca9846.png)
+
+Notice how the inode is identical on the _regular.file_ and _hardlink_ (1016310*49*) but different on the _symlink_ (1016310*50*)
+
+If the original file (__regular.file__) was to move somewhere else, the symlink would break (as the file address changed), but the hardlink would still point to the file as It retains his inode.
+
+![image](https://user-images.githubusercontent.com/72258375/147490679-bff60c07-fee9-4b50-8154-d2dae4f53128.png)
+
+Whether we move the file, or change its content, the hardlink will still access the right file content
+
+![image](https://user-images.githubusercontent.com/72258375/147490778-8e8be230-e1ff-4acc-a4fc-4479b1d4a45f.png)
+
+Hardlinks will only break if the file is moved to another volume.
+
+While symbolic links will only break if the original file is moved or deleted, but It can be used to reference across volumes.
+
+Hardlinks are less and less present in Linux, as they mostly shift towards symbolic links, but can still be encountered in smaller distribution like BusyBox, as It saves space on the drive.
 
 ### Special file
 
+Also named device file, It is an interface for a device driver that appear in a file system as It It were an ordinary file. They are three types: 
+- Block devices - works with fixed-size blocks (see buffers) and large output of data, such as with a hard-drive
+
+You can find them with _lsblk_
+
+![image](https://user-images.githubusercontent.com/72258375/147492302-89fa82e7-8362-4d32-b3a2-e28768c965fb.png)
+
+- Character devices - can only send one character at a time, pratical in an internet connection
+I could not find any command for finding characters devices (unless you want to search the entire file structure), but you can find them in _/sys/dev/char/_
+
+![image](https://user-images.githubusercontent.com/72258375/147492079-04cfb3de-eb7d-4af1-b860-d7dc55ebaaf4.png)
+
+- Pseudo-devices - It is a device driver without an actual device
+
+They serve pratical purpose, like a virtual sinkhole, or producing random data
+
+![image](https://user-images.githubusercontent.com/72258375/147492780-acd3bfd7-aa3b-4a4b-8f5b-cc85b7979559.png)
+
 ### Socket
+
+Sockets are used to communicate between programs. There is two types:
+- Stream sockets (using TCP as their underlying transport protocol)
+- Datagram sockets (using UDP)
+- Unix Domain Sockets (Using IPC - SOCK_STREAM)
+
+You can find them by checking your opened sockets with _ss_ (netstat replacement) in _/proc/{PID}/fd_
+
+![image](https://user-images.githubusercontent.com/72258375/147493356-6eb61d2e-a3fd-477b-ad87-2dbbfe35cf0c.png)
+
+Or look for open files with lsof
+
+![image](https://user-images.githubusercontent.com/72258375/147493636-f87fefb3-c819-4159-b7f2-c40f893f1cde.png)
+
+Alternatively, you can use find on specific file type (here named pipe and sockets)
+
+![image](https://user-images.githubusercontent.com/72258375/147493867-b337bce0-3974-4ae1-be1f-db777a71143e.png)
+
 
 ### Named pipe
 
-### Block device
+A pipe has a read end and a write end. Data written to the write end of a pipe can be read from the read end of the pipe.
 
+As opposed to unnamed pipe, like the one to string together commands like
+
+![image](https://user-images.githubusercontent.com/72258375/147494196-1623ec09-228a-4cc0-b869-e7fb70876449.png)
+
+A named pipe, also known as *First In First Out*, is similar to a pipe but with a name on the filesystem.
+
+Processes can access this special file for reading and writing, and provides bidirectional communication.
+
+It is created with __mkfifo__ and __mknod__ (p for FIFO)
+
+![image](https://user-images.githubusercontent.com/72258375/147495963-2bc42250-dae1-4559-8e71-15a0d913a981.png)
+
+And now we can simply use them to transfer data by specifying the pipe name. Here we use two shells, one for sending the data, the other to receive and compress it.
+
+![image](https://user-images.githubusercontent.com/72258375/147496258-bab99cfb-fc1d-44c9-a3f4-b42034b4d37a.png)
 
 
 ## Partitions
 
+A hard disk can be divided into several partitions that will function as If It were a separate hard disk. The idea is that if you have one hard disk, and you want two operating systems on it, you can divide the disk into two. This information is stored in its first sector, also called *Master boot record (MBR)*, of the disk. This is the sector the BIOS reads in and starts when the machine is first booted. This MBR contains the partition table to check which partition is active (i.e. bootable) and reads the partition's boot sector (in case of Linux, its _/boot_)
+
+We can list our partitions with *lsblk*
+
+![image](https://user-images.githubusercontent.com/72258375/147497253-e9c4e4cc-17a0-4687-91b7-399c8e42c3df.png)
+
+We can see our disk *sda* is split into two partitions:
+- sda1 (containing the first sector _/boot_)
+- sda2 (containing our 49G data and swap)
+  - cs-root (containing our _/_ filesystem)
+  - cs-swap (containing our swap volume)
+
+Disks are automatically named sd{a..b..c...z}
+
+*LVM* just means *logical volume manager*, used to create logical storage volumes with greater flexibility than partitions, such as resizeable storage pools to extend or reduce the volume size without reformatting or repartitioning the underlying disk devices.
+
+Also, a partition can be a primary partition of extended partitions. Consider just main partition and sub-partition if this vocabulary is too complex, they were just made like this because original partitioning scheme for hard disks were limited to four (primary) partitions.
+
 ### Data partition
 
+Considered a normal Linux system data, including the root partition containing all the data to start up and run the system
+
+We will often find a few partitions on the system:
+- _/_      ~ 3-5 GB+ and only ext4 on RHEL distrib
+- _/boot_  ~ 250 MB+ and only ext4 on RHEL distrib
+- _/home_  ~ 100 MB+
 
 ### Swap partition
 
+Expansion of the computer's physical memory, they are used to support virtual memory, and data is written to a swap partition when there is not enough RAM to store the data your system is processing.
+
+Over the past decade, the recommendend amount of swap space increased linearly with the amount of RAM in the system. 
+
+The [recommended swap space](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86) is as follow:
+| Amount of RAM in the system | Recommended swap space |
+| --- | --- |
+| < 2GB | 2 times the amount of RAM |
+| 2-8GB | Equal the amount of RAM | 
+| 8+GB | At least 4 GB |
 
 ## Mounts
+
+All partitions are attached to the system via a mount point. The mount point defines the place of a particular data set in the file system. They can be connected _anywhere_ on the file system, but It is bad practice to do it outside of root subdirectories.
+
+You can check your partition in _/proc/mounts_ or through _df_ utility
+
+![image](https://user-images.githubusercontent.com/72258375/147497957-ece4551c-50e2-46b9-8406-9184dccc987e.png)
 
 
 ## To go further
 
-Each filesystem format has their own implementations, and could be interesting to check at a low-level. We could perform a write/read tests to check which ones are more performant. 
+We covered formatting the filesystem through different format, partitioning it into logical volumes to then be mounted onto your file system, which handles different files types through inodes and binaries.
 
-There is a lot of commands available to play with files in Linux, and they will be covered in a later article.
+There was a lot to uncover, and I was not expecting it to take this long,  but I wanted to give a full picture of what file system are like, from the storage to its terminal.
+
+Each filesystem format has their own implementations, and could be interesting to check at a low-level. We could perform a write/read tests to check which ones are more performant.
+
+There is a lot of commands available to play with files in Linux, like sed/awk/grep/sort/cut, and they will be covered in a later article.
 
 Check out some links below to dive deeper into the subject.
 
@@ -180,3 +338,4 @@ Check out some links below to dive deeper into the subject.
 >
 > https://en.wikipedia.org/wiki/Flash_memory
 >
+> https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9-beta
