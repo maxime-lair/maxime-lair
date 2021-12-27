@@ -1,3 +1,5 @@
+Link to [roadmap_devops](roadTo)
+
 # Project start
 
 This page will be used to record the installation of a self-hosted devops environment.
@@ -16,23 +18,23 @@ It will start as a single host project and will slowly be turning into multiple-
 
 ## Links
 
-1. [Docker](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#docker)
-	- [Pre-requisites](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#pre-requisites)
-	- [Install docker engine](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#install-docker-engine)
-	- [Test docker](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#test-docker)
-	- [Post-install-shenanigan](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#post-install-shenanigan)
-2. [httpd-web-server](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#httpd-web-server)
-	- [Test-the-docker-image](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#test-the-docker-image)
-	- [Docker-compose](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#docker-compose)
-3. [traefik](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#traefik)
-	- [Adding load balancer and reverse-proxy](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-load-balancer-and-reverse-proxy)
-	- [Adding TLS and HTTPS](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Adding-TLS-and-HTTPS)
-4. [Prometheus & Grafana](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#prometheus-and-grafana)
-	- [Prometheus installation](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Prometheus-installation)
-	- [Grafana installation](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Grafana-installation)
-	- [Docker-compose file](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Docker-compose-file)
-	- [Services configuration](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Services-configuration)
-	- [Networks and routing](https://github.com/maxime-lair/maxime-lair/blob/main/docs/index.md#Networks-and-routing)
+1. [Docker](#docker)
+	- [Pre-requisites](#pre-requisites)
+	- [Install docker engine](#install-docker-engine)
+	- [Test docker](#test-docker)
+	- [Post-install-shenanigan](#post-install-shenanigan)
+2. [httpd-web-server](#httpd-web-server)
+	- [Test-the-docker-image](#test-the-docker-image)
+	- [Docker-compose](#docker-compose)
+3. [traefik](#traefik)
+	- [Adding load balancer and reverse-proxy](#Adding-load-balancer-and-reverse-proxy)
+	- [Adding TLS and HTTPS](#Adding-TLS-and-HTTPS)
+4. [Prometheus & Grafana](#prometheus-and-grafana)
+	- [Prometheus installation](#Prometheus-installation)
+	- [Grafana installation](#Grafana-installation)
+	- [Docker-compose file](#Docker-compose-file)
+	- [Services configuration](#Services-configuration)
+	- [Networks and routing](#Networks-and-routing)
 6. Node_exporter & Cadvisor
 
 # Docker
