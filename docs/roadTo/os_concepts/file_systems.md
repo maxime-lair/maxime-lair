@@ -39,19 +39,19 @@ Now that you know that, you will understand why a specific file system format is
 
 Let's say you have a NAND flash memory-based storage devices like a SSD or SD Card. It is not surprising as they are becoming the most used storage device for servers and mobile devices due to their speed, noise and reliability. From what we just learned, they are quick to write into, but last less time. Can we use a file system that address their issues while supporting its strenghts ?
 
-That's what Samsung did with _F2FS_, but It is hard to predict if they will become the most common fs for flash devices.
+That's what Samsung did with _F2FS_, but It is hard to predict if they will become the most common filesystem for flash devices.
 
 ### Ext4
 
 This filesystem format stands for __Extended File system__ and It is the default one in recent Linux. It is backwards compatible with former iterations (ext3, etc.) and useable in Windows 10 since 2016 and macOS through extFS.
 
-It released in 2008 and has stood as one of the most used file system format for more than a decade now. Google is one of their main users since 2010. This is why It is the default format for android phones today. My (humble) guess is ext4 will slowly decline to make room for more modern file systems format.
+It released in 2008 and has stood as one of the most used file system format for more than a decade now. Google is one of their main users since 2010. This is why It is the default format for android phones today. My (humble) guess is ext4 will slowly (~ 10 years) decline to make room for more modern file systems format.
 
 It supports up to 1 Exabyte volumes (1000 To) and file size up to 16 Terabytes (TB).
 
 ### XFS
 
-This format will probably become overthrow ext4, as It was built for performance and is mainly used on storage that are constantly reading and writing data.
+This format will probably overthrow ext4, as It was built for performance and is mainly used on storage that are constantly reading and writing data.
 
 To compare it with ext4, XFS supports up to 16 Exabytes volumes and 8 Exabytes file size (i.e. 16 times larger and 500 times larger than ext4). It also is optimized for quicker crash recovery thanks to its metadata journaling.
 
