@@ -6,7 +6,7 @@ _My lab is running on a Centos 9 Stream, which came out this very month. Most of
 
 ## Definition
 
-[From](https://tldp.org/LDP/intro-linux/html/sect_03_01.html):A simple description of the UNIX system, also applicable to Linux, is this:
+[From TLDP: ](https://tldp.org/LDP/intro-linux/html/sect_03_01.html) A simple description of the UNIX system, also applicable to Linux, is this:
 > "On a UNIX system, everything is a file; if something is not a file, it is a process."
 
 This statement is true because there are special files that are more than just files (named pipes and sockets, for instance), but to keep things simple, saying that everything is a file is an acceptable generalization. A Linux system, just like UNIX, makes no difference between a file and a directory, since a directory is just a file containing names of other files. Programs, services, texts, images, and so forth, are all files. Input and output devices, and generally all devices, are considered to be files, according to the system.
