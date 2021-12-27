@@ -124,19 +124,19 @@ We can however see those main process metrics:
 - CPU and memory usage per process or binary name
 
 Polled in _/proc_:
-- /{PID}
-- /net
-- /sys
-- /mdstat
-- /schedstat
-- /vmstat
-- /meminfo_numa
-- /self
+_- /{PID}_
+_- /net_
+_- /sys_
+_- /mdstat_
+_- /schedstat_
+_- /vmstat_
+_- /meminfo_numa_
+_- /self_
 
 In the case of datadog, they then can end up showing this type of visualization (% of CPU/log ratio):
 ![image](https://user-images.githubusercontent.com/72258375/147466133-0f70798a-4c9e-4947-9fc6-2d07c787e725.png)
 
-**Note:** There is a shifting focus on their containerization metrics, to be able to monitor those processes metrics running inside a container.
+**Note:** There is a shifting focus on their containerization metrics, to be able to monitor those process metrics running inside a container.
 
 ## Take it a step further
 
@@ -146,8 +146,12 @@ Google book about this: [SRE](https://sre.google/sre-book/)
 
 > Credits
 > https://www.redhat.com/sysadmin/linux-command-basics-7-commands-process-management
+> 
 > https://www.baeldung.com/linux/top-command
+> 
 > https://www.baeldung.com/linux/process-states
+> 
 > https://www.kernel.org/doc/html/latest/filesystems/proc.html
+> 
 > https://sre.google/sre-book/
 >
