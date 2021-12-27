@@ -105,27 +105,33 @@ These tools are absolutely optional, but they can help having a better top-level
 
 | Subdirectory | Description |
 | --- | --- |
-| `/bin` | Contains binaries (Over 260M and 1300 files), this directory has evolved overtime. In the past, It contained the minimum number of binaries needed to operate the system (like busybox). Now, It's merged with non-essential binaries (multi-user mode), and */bin* is just a symlink for backwards compatibility|
-| `/boot` |  |
-| `/dev` |  |
-| `/etc` |  |
-| `/home` |  |
-| `/lib` |  |
-| `/media` |  |
-| `/mnt` |  |
-| `/opt` |  |
-| `/proc` |  |
-| `/root` |  |
-| `/run` |  |
-| `/sbin` |  |
-| `/srv` |  |
-| `/sys` |  |
-| `/tmp` |  |
-| `/usr` |  |
-| `/var` |  |
+| `/bin` | Contains binaries (Over 260M and 1300 files), this directory has evolved overtime. In the past, It contained the minimum number of binaries needed to operate the system (like busybox). Now, It's merged with non-essential binaries (multi-user mode), and */bin* is just a symlink for backwards compatibility. You should never install a binary here, only the ones provided by the OS. Prefer using **/usr/local/bin**|
+| `/boot` | Contains boot loader files responsible for booting the server (efi, grub, loader and the kernel **vmlinuz**), this directory is critical for loading linux on reboot |
+| `/dev` | Stands for **device**, lists references to all CPU peripheral hardware, which are files with special properties, tty are for terminals (USB, serial port), sd for mass-storage driver, mem for main memory, hd for IDE driver, and pt for pseudo-terminals. There is three types: character, block and pseudo devices.|
+| `/etc` | Host-specific system-wide configuration files, It only contains static files. One notable subdirectory is **/etc/opt** used for add-on configuration packages |
+| `/home` | Users home directories, containing all their saved files and settings |
+| `/lib` | Libraries used by binaries and compilers (like libncurses or motd). You can check what libraries a binary uses with **ldd** command |
+| `/media` | Mount points for removable media such as CD-ROMs, USB drives |
+| `/mnt` | Temporarily mounted filesystems, you can create mount points anywhere in the system, but It is standard convention (and sheer praticality) to not litter the file system with randomly placed mount points |
+| `/opt` | Used for third-party application without dependency outside of their package, It is supposed to be self-contained |
+| `/proc` | Virtual filesystem (only available at runtime) providing process and kernel information as files, usually a __procfs__ which create a hierarchical file-like structure used to dynamically access process data held in the kernel without using tracing methods or direct access to kernel memory |
+| `/root` | Home directory of your system boss (root user) |
+| `/run` | Recent subdirectory, It holds run-time variable data. It contains information about the running system since last boot, like currently logged-in users and running daemons. They are removed or truncated at the next boot process |
+| `/sbin` | Contains essential system binaries, used for maintenance or administrative tasks. Locally installed binaries should be sent to **/usr/local/sbin**. We may find *fdisk, lilo, init, ip*, and interestingly enough, we may find some these binaries in */etc* in older distributions |
+| `/srv` | Holds site-specific data which is served by the system (ftp, rsync, www, cvs) |
+| `/sys` | It is a virtual file system that can be accessed to set or obtain information about the kernel's view of the system. It is different from _/dev_ as the latter contains the actual devices files without going through the kernel, while _/sys_ is an interface to the kernel, much like _/proc_. It contains informations on drivers, busses, network and much [more](https://www.kernel.org/doc/Documentation/filesystems/sysfs.txt). Also _/proc_ is older and less structured. |
+| `/tmp` | Contains files that are required temporarily, like lock files. It is one of the few subdirectory of _/_ that does not require to be superuser |
+| `/usr` | Usually contains by far the largest share of data on a system (Here 3G). It contains user binaries (in _/usr/bin_), libraries (_/usr/lib_), etc. It is deemed as shareable, read-only data and must not be written to. Any information that is host specific or varies with time is stored elsewhere.  |
+| `/var` | Contains variable data like system logging files, mail and printer spool directories. Some portions are not shareable between systems, like _/var/log_ or _/var/lock_, while other may be shared, like _/var/mail_ or _/var/spool/news_.|
+
+Some directories are more critical than others, and can be put onto separate partitions or systems, for easier backup, due to network topology or security concerns. 
+
+'Mountable' (Non-critical) directories are: _/home_ _/mnt_ _/tmp_ _/var_ 
+Essential directories for booting are : _/usr_ _/boot_ _/dev_ _/etc_ _/lib_ and _/proc_
 
 ## File types
 
+Now that we know what each directory purpose is, we can take a look further into the file system. After directory comes files, so let's check each of them !
 
 ### Regular file
 
