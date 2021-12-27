@@ -142,7 +142,7 @@ In the case of datadog, they then can end up showing this type of visualization 
 
 Check out ressources on distributed and containerized infrastructures, as they make this more complex.
 
-Google book about this: [SRE](https://sre.google/sre-book/)
+You can also dive deeper into the subsystem of process management like signal handling, process/thread creation & termination and process scheduler.
 
 > Credits
 > https://www.redhat.com/sysadmin/linux-command-basics-7-commands-process-management
