@@ -299,6 +299,7 @@ Expansion of the computer's physical memory, they are used to support virtual me
 Over the past decade, the recommendend amount of swap space increased linearly with the amount of RAM in the system. 
 
 The [recommended swap space](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86) is as follow:
+
 | Amount of RAM in the system | Recommended swap space |
 | --- | --- |
 | < 2GB | 2 times the amount of RAM |
