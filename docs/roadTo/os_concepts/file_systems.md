@@ -61,7 +61,7 @@ It is supported by most operating systems, and can be used in google cloud for _
 
 As the last file system format we check, with previous ones focused on flash, wide-support and performance, we will study one mainly used for long-term storage (for NAS, etc).
 
-It includes snapshots and self-healing mechanisms. Facebook is one of their users, much like Parrot project and Trupadvisor. It is the least popular ones among the four, as It is one of the most recent (~ stable as of 2013). As soon as people starts to use it and understand the snapshot perks, It might gain more traction in the future.
+It includes snapshots and self-healing mechanisms. Facebook is one of their users, much like Parrot project and Tripadvisor. It is the least popular ones among the four, as It is one of the most recent (~ stable as of 2013). As soon as people starts to use it and understand the snapshot perks, It might gain more traction in the future.
 
 ## Linux file system structure
 
@@ -79,44 +79,50 @@ In CentOS 9:
 
 Let's check each subdirectories, and understand what type of files we could find there
 
-### /bin
+### Useful tools
 
+To help us navigate through this filesystem, we can use some nice external utilities that nicely print file systems like:
 
+- _nnn (C based)_ 
 
-### /boot
+![image](https://user-images.githubusercontent.com/72258375/147481605-6289cb1d-6928-4a40-9eb9-a5db70695ca1.png)
 
-### /dev
+- _xplr (made in Rust)_
 
-### /etc
+![image](https://user-images.githubusercontent.com/72258375/147480501-4d047621-1d19-4010-b5f1-bba5e572504f.png)
 
-### /home
+- _midnight_commander (C based)_
 
-### /lib
+![image](https://user-images.githubusercontent.com/72258375/147482379-caecf9e3-9bab-42f7-bd69-0e99e99a8ac8.png)
 
-### /media
+- _ranger (made in Python)_
 
-### /mnt
+![image](https://user-images.githubusercontent.com/72258375/147480010-78787424-c548-4b2d-96d1-d8bba80f286b.png)
 
-### /opt
+These tools are absolutely optional, but they can help having a better top-level view of the structure.
 
-### /proc
+### Root subdirectories
 
-### /root
-
-### /run
-
-### /sbin
-
-### /srv
-
-### /sys
-
-### /tmp
-
-### /usr
-
-### /var
-
+| Subdirectory | Description |
+| --- | --- |
+| `/bin` | Contains binaries (Over 260M and 1300 files), this directory has evolved overtime. In the past, It contained the minimum number of binaries needed to operate the system (like busybox). Now, It's merged with non-essential binaries (multi-user mode), and */bin* is just a symlink for backwards compatibility|
+| `/boot` |  |
+| `/dev` |  |
+| `/etc` |  |
+| `/home` |  |
+| `/lib` |  |
+| `/media` |  |
+| `/mnt` |  |
+| `/opt` |  |
+| `/proc` |  |
+| `/root` |  |
+| `/run` |  |
+| `/sbin` |  |
+| `/srv` |  |
+| `/sys` |  |
+| `/tmp` |  |
+| `/usr` |  |
+| `/var` |  |
 
 ## File types
 
