@@ -28,10 +28,11 @@ ctrl + b + arrow_key          next pane
 
 For more, check out the [cheatsheet](https://tmuxcheatsheet.com/)
 
-Let's create (or add) to __~/.tmux.conf__ the ability to scroll up/down on our pane (otherwise we will be unable to):
+Let's create (or add) to __~/.tmux.conf__ the ability to scroll up/down on our pane and have some nice terminal olors:
 ```
 $ cat ~/.tmux.conf
 set -g mouse on
+set -g default-terminal "screen-256color"
 ```
 
 ## Tmuxinator
