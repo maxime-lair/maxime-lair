@@ -2,7 +2,7 @@
 
 In this article, we will take a look at how memory and storage interact in Linux, the different technology available, and their perks and defaults
 
-_Note I'm running a CentOS9 Stream in this article, It came out this very month, I will not be covering UNIX or Windows, only Linux_
+_Note: Im running a CentOS9 Stream in this article, It came out this very month, I will not be covering UNIX or Windows, only Linux_
 
 ## Physical memory
 
@@ -15,22 +15,22 @@ RAM was made to be performant, quick access on read and write, while disk can fo
 
 ### Types of RAM
 
-Most RAM today are of DDR-RAM type, which mean stands for *D*ouble *D*ata *R*ate, which exist since 2002. Compared to a single data rate, Its performance is doubled as It was able to read data on both the rising and falling edges of the clock signal.
+Most RAM today are of DDR-RAM type, which stands for *D*ouble *D*ata *R*ate and exist since 2002. Compared to a single data rate, Its performance is doubled (up to 3 GB/s) as It was able to read data on both the rising and falling edges of the clock signal.
 
-DDR2 was then invented in 2004, delivering up to 8.5 GB/s bandwidth. 
-It introduced the _dual-channel memory_ concept, where CPUs could communicate using a bus with the memory module through independent channel, essentially amping up the bandwidth as data could be sent on more than one channel.
+DDR2 was then invented in 2004, delivering up to 6.5 GB/s bandwidth. 
+It introduced the _dual-channel memory_ concept, where CPUs could communicate using a bus with the memory module through independent channels, essentially amping up the bandwidth as data could be sent on more than one channel.
 Today, servers are usually designed with six to eight channels.
 
-The most important part is : you can not use more than one type of memory per motherboard, they can only handle on type of memory.
-In reality, It goes even further as to only use memory from the same type, manufacturer and frequency.
+The most important part is : you can not use more than one type of memory per motherboard, they can only handle on type of memory (DDR2 or DDR3 or else..).
+In reality, It goes even further than that as you only use memories of the same type, manufacturer and frequency.
 
-Each DDR iteration made memory faster and more energy efficient. DDR3, which came out in 2007, made bandwidth up go to 17GB/s.
+Each DDR iteration made memory faster and more energy efficient. DDR3, which came out in 2007, made bandwidth go up to 15 GB/s.
 
-Today, most servers are using DDR4, pushing up to 25GB/s, and we are slowly shifting towards DDR5, released in 2020, with 20GB/s bandwidth.
+Today, most servers are using DDR4, pushing up to 25GB/s, and we are slowly shifting towards DDR5, released in 2020, with 50 GB/s bandwidth.
 
 If you try to get DDR5 memory now, It will probably cost you a lot of more than for DDR4, as It is still difficult to ramp up into mass-production.
 
-_Note_ There is also _VRAM_ but It is only used in graphic cards, and It is a lot more expensive.
+_Note_: There is also _VRAM_ but It is only used in graphic cards, and It is a lot more expensive.
 
 You might also notice some memory marked as *ECC* which stands for *E*rror *c*orrection *c*ode. ECC memory maintains a memory system immune to single-bit errors.
 It decreases your memory overall performance by 2-3% and cost more, but makes your memory a lot more reliable. Mostly used in database or file servers, It reduces the number of crashes due to memory data corruption.
@@ -48,12 +48,12 @@ If you are not happy with DDR memory, you can upgrade to *HBM* memory. They will
 
 As system becomes more greedy in memory usage and RAM becoming more scarce, Linux had to think about ways to make the system reproduce RAM virtually.
 
-Virtual memory is using a disk as an extension of RAM, so the effective sie of usable memory grows correspondingly.
+Virtual memory is using a disk as an extension of RAM, so the effective size of usable memory grows correspondingly.
 
 Of course, reading and writing on the hard disk is thousand times slower than using physical memory, but with the rise of SSD, this technology is becoming more and more efficient.
 
 The part of the hard disk used as virtual memory is called *swap space*. It can be a normal file or a separate partition (recommended).
-While using a file allows for more flexibility, as you dont need to reformat it, the current standard is to use LVM data partition together with swap partition.
+While using a file allows for more flexibility, as you dont need to reformat it, the current standard is to use LVM data partition together with a swap partition.
 
 Like so:
 
@@ -75,13 +75,13 @@ _Shared_ memory is when multiple process use the same memory block.
 _Buffers/cache_ represents the disk buffer cache.
 
 As reading from a disk is very slow compared to physical memory, It is common to save commonly accessed data onto the memory until no longer needed.
-It speeds up all but the first read (when you access it on the disk), and It is called *disk buffering* while the memory used for this purpose is called *buffer cache*
+It speeds up all but the first read (when you first access it on the disk), and It is called *disk buffering* while the memory used for this purpose is called *buffer cache*
 
 If this buffer cache is full, the data unused for the longest time is discarded first to free up some memory.
 
 This is important as this disk buffering works for writes as well, and is the cause of lost data when the system crash as It has no time to save it onto the disk.
 
-You can force this write with _sync_ or _bdflush_
+You can force this write with _sync_ or _bdflush_ (automatic on Linux every 30 seconds)
 
 ![image](https://user-images.githubusercontent.com/72258375/147561561-06de508c-2ed2-4a96-b707-13575dc3795d.png)
 
@@ -167,8 +167,7 @@ HDDs are considered as the most reliable data storage hardware in most servers, 
 
 They are often called SATA drive, as this is the name of the computer bus interface that connects them to the motherboard.
 It's not wrong to say that, but SSDs can also be connected to the motherboard through the SATA interface.
-To bring a few words on SATA, there is today others solutions like Thunderbolt, SCSI, NVMe.
-SATA has 3 versions (I II III), going from 150 MB/s, 300 MB/s to 600MB/s, however [most hard-drive are unable to beyond 150 MB/s speed](https://hdd.userbenchmark.com/).
+To bring a few words on SATA, there is today others solutions like Thunderbolt, SCSI, NVMe. SATA has 3 versions (I II III), going from 150 MB/s, 300 MB/s to 600MB/s, however [most hard-drive are unable to beyond 150 MB/s speed](https://hdd.userbenchmark.com/).
 
 This is the reason why SATA drive are an idiom for hard-drive disk, even though SATA III could handle some SSD speed.
 
