@@ -88,7 +88,7 @@ You will notice a lot of attributes, one metric is great at identifying bottlene
 
 It represents the percentage of time the CPU had to wait before reading or writing data.
 
-We can also use _iotop_ to check those informations. However [this type of information is not available by default](https://superuser.com/questions/610581/iotop-complains-config-task-delay-acct-not-enabled-in-kernel-only-for-specific), and It seems there is a kernel issue in the latest distribution, as enabling it does nothing. Used with `iotop -aoP` would have shown us how much a process has written and read since iotop started, too bad.
+We can also use _iotop_ to check those informations. However [this type of information is not available by default](https://superuser.com/questions/610581/iotop-complains-config-task-delay-acct-not-enabled-in-kernel-only-for-specific), and It seems there is a kernel issue in the latest distribution, as enabling it does nothing. Using `iotop -aoP` would have shown us how much a process has written and read since iotop started, too bad.
 
 ![image](https://user-images.githubusercontent.com/72258375/147594482-eaa0bd1a-bc2a-4134-b784-4e4518584a93.png)
 
