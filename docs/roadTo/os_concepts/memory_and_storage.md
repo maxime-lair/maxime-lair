@@ -40,6 +40,8 @@ On Linux, you can check the physical chip information with `dmidecode` - type 17
 ![image](https://user-images.githubusercontent.com/72258375/147559741-46e49dd1-94dc-4c27-8843-e8bc19d0f7be.png)
 
 
+If you are not happy with DDR memory, you can upgrade to *HBM* memory. They will be able to handle ~ 300 GB/s but they do not come cheap.
+
 ## Virtual memory
 
 ### Definition
@@ -161,39 +163,84 @@ We will not cover USB flash drive, optical storage such as Blu-Ray discs, as the
 #### Hard-drive
 
 An HDD (*H*ard *d*isk *d*rive) is a hard drive that uses mechanical spinning disks using a magnetic tip to read and write data.
-HDDs are considered as the most reliable data storage hardware in most servers, the main appeal to get them are their cheap cost, although they are slower than others solutions.
+HDDs are considered as the most reliable data storage hardware in most servers, the main appeal to get them are their cheap cost compared to their capacity, although they are slower than others solutions.
 
 They are often called SATA drive, as this is the name of the computer bus interface that connects them to the motherboard.
 It's not wrong to say that, but SSDs can also be connected to the motherboard through the SATA interface.
 To bring a few words on SATA, there is today others solutions like Thunderbolt, SCSI, NVMe.
 SATA has 3 versions (I II III), going from 150 MB/s, 300 MB/s to 600MB/s, however [most hard-drive are unable to beyond 150 MB/s speed](https://hdd.userbenchmark.com/).
 
-This is the reason why SATA drive are an idiom for hard-drive disk, even though SATA III could very well handle some SSD speeds (~ 500 MB/s).
+This is the reason why SATA drive are an idiom for hard-drive disk, even though SATA III could handle some SSD speed.
 
-Server hard drive works 24/7/365, and usually comes in with a 10-year warranty. This makes them way more pricer, but manufacturer often categorize them into three:
+Server hard drive works 24/7/365, and usually comes in with a [3-5 years warranty](https://www.seagate.com/fr/fr/products/hard-drives/barracuda-hard-drive/). This makes them way more pricer, but manufacturer often categorize them into three:
 - ECO - consumer-grade hard-drive
 - BC - pro-grade hard-drive
 - EP - server-grade hard-drive
 
-These hard-drives have differents requirements, for reliability, recovery and speed. You can expect a 10
+These hard-drives have differents requirements, for reliability, recovery and speed. Most benchmark will try to compare their sequential and random write and read speeds, but price and capacity should be equally considered. There is never too many HDDs.
 
 #### SSD
 
-#### NVMe
+While HDDs are mechanical disks, SSD are flash storage and are much faster (boot time is 10s). They are more expensive, and data recovery can be complicated. It is however easier to transport (no moving parts), and consume less power. Most manufacturers are now focusing primarly on SSDs instead of HDDs.
 
+SSDs are usually limited to their bus speed, in case of SATA III at around 450 MB/s sequential speed making them 3 times faster than HDDs. For comparaison, USB3 has transmission speed up to 600 MB/s while USB2 are limited to 50 MB/s.
+
+This is the reason why most SSDs are now connected through PCIe (3.0 or 4.0) or NVMe, as they are able to scale way better. 
+
+*PCIe* depends on their version (currently from 1 to 6) and their number of channels. x16 being the usual amount.
+
+| PCIe version | PCIe x16 speed (GB/s) |
+| --- | --- |
+| 1.x | 4 |
+| 2.x |  8 |
+| 3.x |  16 |
+| 4.x |  32 |
+| 5.x |  63 |
+| 6.x |  126 |
+
+With SSD, going from SATA to PCIe-6-x16 (which comes out next year), would make it go 210 times faster. Of course, you would be then limited by your RAM or CPU speed.
+
+*NVMe* is a communication interface standing between your CPU and your storage interface using PCIe sockets. It was solely designed for SSD. While there is a few SSDs format, such as _2.5"_ or _mSATA_, the only one compatible with _NVMe_ version are _M.2_ and _U.2_. Main differences between these last two formats is U.2 allows for hot-swap, you can add them during your system runtime.
+
+If you are still not satisfied with this, check out [Optane](https://www.intel.com/content/www/us/en/products/details/memory-storage.html).
 
 ### Cool commands
 
-df
+Now that we understand the different types of storages, Linux allows us to check their health through a few commands
 
-du
+You could use _df_ to report file system disk space usage. But It doesn't show you your physical hard drives.
 
-fdisk -l
+![image](https://user-images.githubusercontent.com/72258375/147573437-3f596eec-d04f-40a6-8a72-b0cb93b4c0b0.png)
+
+If you are more interested in which files takes the most space, _du_ is your tool:
+
+![image](https://user-images.githubusercontent.com/72258375/147573846-19df5e37-cc62-4968-86d0-10cccd9426fb.png)
+
+More focused on drives ? Use _fdisk_ ir _lsblk_:
+
+![image](https://user-images.githubusercontent.com/72258375/147573963-735d9d77-ef88-4401-a49c-ab9ec63dd78a.png)
+
+![image](https://user-images.githubusercontent.com/72258375/147574214-0e2f09bf-dca3-450e-bef3-5f116bb0ad89.png)
 
 
+Oh you meant actual hardware informations on those disks ? Use _lshw -class disk_
+
+![image](https://user-images.githubusercontent.com/72258375/147574181-3a3c7b38-935f-451c-b023-87c814e4859c.png)
+
+If you want to dive deeper, you might want to check out the available informations in _/dev/disk_ where you can sort by:
+
+![image](https://user-images.githubusercontent.com/72258375/147574278-8cefe57d-a024-452a-bf1a-119423b9993a.png)
+
+or in _/sys/block_
+
+![image](https://user-images.githubusercontent.com/72258375/147574318-ccb69a01-5b6d-4413-8bb1-362d247f6e3d.png)
 
 
 ## To go further
+
+If you are running another OS, check out [rosetta](http://bhami.com/rosetta.html) to help you find the right commands.
+
+There was a lot to cover on this one, but I learned a lot on the virtual memory and bus interface, so all worth it !
 
 
 > Credits
@@ -207,3 +254,5 @@ fdisk -l
 > https://tldp.org/LDP/sag/html/buffer-cache.html
 >
 > https://www.kernel.org/doc/html/latest/admin-guide/mm/concepts.html
+> 
+> https://www.redhat.com/sysadmin/dissecting-free-command
