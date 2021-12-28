@@ -24,6 +24,7 @@ Besides the system bus, several other types exists, like ISA or USB, that commun
 
 An image speak louder than words:
 
+![image](https://user-images.githubusercontent.com/72258375/147587672-f4b525a4-9849-4581-b22e-af9fdc50c6ba.png)
 
 
 
