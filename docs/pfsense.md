@@ -14,13 +14,13 @@ For this, we will be running this inside an hypervisor called ESXi, and with sev
 First, let's create our network bridge. We want our private network to be able to reach public network, but we don't want random public network to poll our private network. That means they need to communicate through a firewall, that's PFSense.
 
 First, our public network is defined with this IP block, this is what I was assigned to:
-`
+```
 Public IP:  141.95.187.105
 
 Gateway:    141.95.187.110
 
 Netmask:    255.255.255.248 (/29)
-`
+```
 
 We now have two choices:
 - Create our PFSense, assign it this IP and create two VLANs that will act as WAN and LAN.
