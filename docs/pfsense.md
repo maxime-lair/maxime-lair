@@ -169,9 +169,10 @@ We end up with this infrastructure:
 
 Lanlab(s) will be used to host kubernetes nodes, and esxi-lab is here for quick services testing.
 
-*Credits*
-
+> *Credits*
+>
 > https://docs.ovh.com/au/en/dedicated/pfSense-bridging/#requirements
+> 
 > https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/networking_guide/sec-configuring_ip_networking_with_nmcli
 
 
