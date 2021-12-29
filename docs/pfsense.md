@@ -117,7 +117,7 @@ It's possible to create this device through `nmcli` but we already did that when
 
 Our network, as defined in PFSense, will look like this:
 
-`
+```
 Network:    10.0.0.0/24
 
 Gateway:    10.0.0.1
@@ -125,7 +125,7 @@ Gateway:    10.0.0.1
 Broadcast:  10.0.0.255
 
 Mask(/24):  255.255.255.0
-`
+```
 
 Since this is our first system we set up in this network, let's just increment and use the first available IP: *10.0.0.2*
 For others installations, we will try to have a DHCP server to assign this automatically.
