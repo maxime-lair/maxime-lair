@@ -16,7 +16,9 @@ First, let's create our network bridge. We want our private network to be able t
 First, our public network is defined with this IP block, this is what I was assigned to:
 `
 Public IP:  141.95.187.105
+
 Gateway:    141.95.187.110
+
 Netmask:    255.255.255.248 (/29)
 `
 
