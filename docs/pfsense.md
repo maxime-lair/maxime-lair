@@ -111,11 +111,12 @@ First, we check which devices we will use:
 
 ![image](https://user-images.githubusercontent.com/72258375/147653668-df93e522-1b04-426c-88d9-46ba7043ffa2.png)
 
-*ens32* will be our dedicated device. Here _nmcli dev_ stands for _nmcli device status_ - It's a nice shortcut.
+*ens32* will be our dedicated device. Here `nmcli dev` stands for `nmcli device status` - It's a nice shortcut.
 
-It's possible to create this device through _nmcli_ but we already did that when creating the VM.
+It's possible to create this device through `nmcli` but we already did that when creating the VM.
 
 Our network, as defined in PFSense, will look like this:
+
 `
 Network:    10.0.0.0/24
 Gateway:    10.0.0.1
