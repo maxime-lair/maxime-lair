@@ -24,7 +24,7 @@ Netmask:    255.255.255.248 (/29)
 
 We now have two choices:
 - Create our PFSense, assign it this IP and create two VLANs that will act as WAN and LAN.
-- Create *vNIC* together *vSwitch* in our hypervisor ESXi that will act as our LAN network.
+- Create *vNIC* together with *vSwitch* in our hypervisor ESXi that will act as our LAN network.
 
 Question is: do we create our LAN network at the hypervisor level, or VM level ? Both could work (see *router on a stick*)
 But It's recommended to create them at the hypervisor level, as It makes it way easier to create new VMs in this LAN network, and in PFSense, you can restart one network adapter without bothering the other.
@@ -128,6 +128,7 @@ Mask(/24):  255.255.255.0
 ```
 
 Since this is our first system we set up in this network, let's just increment and use the first available IP: *10.0.0.2*
+
 For others installations, we will try to have a DHCP server to assign this automatically.
 
 `nmcli connection modify ens32 ipv4.addresses "10.0.0.2/24" ipv4.gateway "10.0.0.1 ipv4.method manual"`
