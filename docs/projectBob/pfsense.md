@@ -131,7 +131,7 @@ Since this is our first system we set up in this network, let's just increment a
 
 For others installations, we will try to have a DHCP server to assign this automatically.
 
-`nmcli connection modify ens32 ipv4.addresses "10.0.0.2/24" ipv4.gateway "10.0.0.1 ipv4.method manual"`
+`nmcli connection modify ens32 ipv4.addresses "10.0.0.2/24" ipv4.gateway "10.0.0.1 ipv4.method "manual" ipv4.dns "10.0.0.1"`
 
 Our device is now set with his static IP, and indicating the gateway creates the route. Be careful as the default connection is usually with DHCP activated (_ipv4.method_ set to manual instead of auto)
 
@@ -168,6 +168,63 @@ We end up with this infrastructure:
 ![image](https://user-images.githubusercontent.com/72258375/147668332-6befe267-9e69-45ef-808b-11ae498df370.png)
 
 Lanlab(s) will be used to host kubernetes nodes, and esxi-lab is here for quick services testing.
+
+For next hosts, we can rename them with
+
+`hostnamectl set-hostname lanlabX`
+
+Then reboot.
+
+If you can't resolve DNS entry (you can `wget http://1.1.1.1` but not `wget http://google.com`), check your configuration in _/etc/resolv.conf_ ; I had to reboot on mine, even though _nmcli_ worked on others hosts..
+
+# Configuring PFSense
+
+Now that we have a working traffic network, we need to set up some policies.
+
+Let's use PFSense GUI -> System -> Setup Wizard
+
+We don't have anything to change, besides maybe your DNS server, just make sure on _step 4/9_ to select Static and not DHCP.
+
+Next, we want to set up SSH tunneling, so we can SSH from a remote terminal into our lan-lab networks.
+
+In System -> Advanced -> Check *Enables ssh-agent forwarding support* - This will allow us to authenticate with our local RSA key when tunneling instead of PFSense's one.
+
+![image](https://user-images.githubusercontent.com/72258375/147681744-5b037c58-39f5-4b01-933c-1be9cf0f2173.png)
+
+Don't forget to remove Password authentication in the long-run and only allow public key authentication.
+
+Now we need to authorize some ports from WAN into our LAN. You can check out some common skeleton, but It really depends on your infrastructure. As for mine, I'm still modifying it heavily.
+
+For now, we will just authorize SSH connections in our network.
+
+![image](https://user-images.githubusercontent.com/72258375/147689395-42b60966-e39a-4001-b4e0-c953cd8ddd08.png)
+
+## SSH Tunneling
+
+We want to connect from a remote terminal in our lanlab systems, we will try to connect through a SSH tunnel by bouncing off PFSense into our Lab network.
+
+We will be using our `~/.ssh/rsa_pub.key` from our local terminal.
+
+We go back on PFSense, and on the GUI (_User Manager -> Edit -> Authorized SSH Keys_), we add our key (you could also add it through the terminal).
+
+Since our plan is : (Local Terminal) --> (PFSense) --> (Remote lab), we will use `ssh -J USER@PFSENSE USER@LAB`
+
+![image](https://user-images.githubusercontent.com/72258375/147690252-f61252d7-1b93-4e21-bd14-ba38b93635f4.png)
+
+Of course we could use a ProxyCommand file to avoid using this jump everytime. Let's disable password authentication on PFSense after we have spread our _id_rsa.pub_
+
+After adding a DNS entry for PFSense (too lazy to remember the IP), I have this configuration for accessing my LAB:
+
+![image](https://user-images.githubusercontent.com/72258375/147693089-d59bdb2d-b6ad-4117-9e1b-c38db20e2336.png)
+
+I can't use DNS entries for the systems inside the LAB, as PFSense can't make the link between it yet (He doesn't have any DNS or DHCP server with those entries yet).
+
+Now, we are ready to connect into our infrastructure:
+
+![Animation](https://user-images.githubusercontent.com/72258375/147693700-565adaba-9dfe-4e52-93ae-683d2a3512ac.gif)
+
+
+This should not be our final setup, as we will want to use OpenVPN at one point instead of this tunnel, and some DHCP/DNS, but It's working well for now. There is still much more to do with setting up a DEV/UAT/PROD environment.
 
 > *Credits*
 >
