@@ -18,6 +18,5 @@ Here is a list of some envisionned projects:
 
 And many others projects
 
-Check out those links below for the current project documentation
-- [Docker introduction](https://maxime-lair.github.io/maxime-lair/)
-- [Roadmap articles following roadmap.sh](https://maxime-lair.github.io/maxime-lair/roadTo.html)
+Check out this link below for current progress:
+- [Index](https://maxime-lair.github.io/maxime-lair/)
