@@ -18,5 +18,4 @@ Here is a list of some envisionned projects:
 
 And many others projects
 
-Check out this link below for current progress:
-- [Index](https://maxime-lair.github.io/maxime-lair/)
+### [Check me out for current progress](https://maxime-lair.github.io/maxime-lair/):
