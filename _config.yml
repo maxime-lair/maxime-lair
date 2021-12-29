@@ -2,9 +2,8 @@ title: Road to Devops
 description: Aiming to learn more about devops, used for writing articles and hosting projects on my own infrastructure
 show_downloads: true
 google_analytics:
-remote_theme: mmistakes/minimal-mistakes@4.24.0
+theme: jekyll-theme-cayman
 plugins:
 - jekyll-remote-theme
 - jekyll-include-cache
 
-theme: jekyll-theme-cayman
