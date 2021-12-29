@@ -119,8 +119,11 @@ Our network, as defined in PFSense, will look like this:
 
 `
 Network:    10.0.0.0/24
+
 Gateway:    10.0.0.1
+
 Broadcast:  10.0.0.255
+
 Mask(/24):  255.255.255.0
 `
 
