@@ -68,8 +68,8 @@ Each units is configured through a plain-text files, with a _.ini_ type syntax.
 | Path | Type of unit |
 | --- | --- |
 | _/usr/lib/systemd/system_ | systemd default unit distributed by RPM packages |
-| _/run/systemd/system_ | Systemd unit files created at run time. This directory takes precedence over the directory with installed service unit files |
-| _/etc/systemd/system_ | Systemd unit files created by systemctl enable as well as unit files added for extending a service. This directory takes precedence over the directory with runtime unit files.  |
+| _/run/systemd/system_ | Systemd unit files created at run time. This directory takes precedence over the default |
+| _/etc/systemd/system_ | Systemd unit files created by systemctl enable as well as unit files added for extending a service. This directory takes precedence over the run-time one  |
 
 An example of _crond.service_ unit configuration, part of the default configuration:
 
