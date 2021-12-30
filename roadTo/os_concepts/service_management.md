@@ -35,16 +35,16 @@ You can analyze each file full configuration with `systemd-analyze cat-config [P
 At its core, *systemd* manages units, and there is 11 available, highlighted in bold are the most important:
 | Units | Description |
 | --- | --- |
-| Service | *Start and control daemons and processes they consit of, It is the most used* |
-| Socket | *Encapsulate local IPC or network sockets in the system, useful for socket-based activation* |
-| Target | *Useful to group other units through a chain of dependencies* |
-| Device | *Expose kernel devices and may be used to implement device-based activation* |
-| Mount | *Control mount points in the file system* |
+| Service | **Start and control daemons and processes they consit of, It is the most used** |
+| Socket | **Encapsulate local IPC or network sockets in the system, useful for socket-based activation** |
+| Target | **Useful to group other units through a chain of dependencies** |
+| Device | **Expose kernel devices and may be used to implement device-based activation** |
+| Mount | **Control mount points in the file system** |
 | Automount | For on-demand mounting of file systems (hot-plug..) |
-| Timer | *Useful for triggering activation of other units based on timers* |
+| Timer | **Useful for triggering activation of other units based on timers** |
 | Swap | Similar to mount units, encapsulate memory swap components of the operating system |
 | Path | Used to activate other services when file system objects change |
-| Slice | *Group and manage processes and resources (cgroups)* |
+| Slice | **Group and manage processes and resources (cgroups)** |
 | Scope | Similar to service units, but for foreign processes management (e.g. init) |
 
 Units are named after their configuration files, which can include positive or negative requirement dependencies as well as ordering.
