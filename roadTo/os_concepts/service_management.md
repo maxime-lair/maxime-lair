@@ -78,7 +78,7 @@ An example of _crond.service_ unit configuration, part of the default configurat
 You can notice its scheduling dependencies on _After=_ and _WantedBy_ ; It is also able to restart itself on a specific timer.
 
 *Note:* It's common case to have those service units configuration created in the three locations, and there is a link on higher priority paths towards the default one.
-Be careful when If you try to change it, as anything written in the default unit path will be overwritten at each OS update.
+Be careful when you change it, as anything written in the default unit path (in _/usr/lib/_) will be overwritten at each OS update.
 
 ![image](https://user-images.githubusercontent.com/72258375/147775146-a4a428fc-b659-429c-9790-fb865d88f6f2.png)
 
