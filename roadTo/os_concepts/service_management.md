@@ -130,9 +130,9 @@ Ping / Pong
 > 
 > https://en.wikipedia.org/wiki/Systemd
 >
-> 
+> https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/system_administrators_guide/chap-managing_services_with_systemd
 >
-> 
+> https://www.computernetworkingnotes.com/linux-tutorials/
 >
 > 
 >
