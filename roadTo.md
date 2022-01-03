@@ -7,3 +7,4 @@
    - [File systems](roadTo/os_concepts/file_systems)
    - [Memory and storage](roadTo/os_concepts/memory_and_storage)
    - [IO management](roadTo/os_concepts/IO_management)
+   - [Service managemet](roadTo/os_concepts/service_management)
