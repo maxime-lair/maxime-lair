@@ -15,7 +15,7 @@ I will try to focus on the inner architecture and useful commands, without divin
    - [File systems](roadTo/os_concepts/file_systems)
    - [Memory and storage](roadTo/os_concepts/memory_and_storage)
    - [IO management](roadTo/os_concepts/IO_management)
-   - Service management (Systemd)
+   - [Service management](roadTo/os_concepts/service_management)
    - Startup management (Initd)
    - Posix Basics
    - Virtualization
