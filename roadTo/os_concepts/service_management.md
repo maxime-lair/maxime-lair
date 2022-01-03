@@ -168,7 +168,7 @@ Let's create our own service unit, which will simply repeat a ping/pong in a fil
 
 Two things to note before we start:
 - System services are **unable** to read from the standard input stream, and when started, It connects its standard input to _/dev/null_ to prevent any interaction.
-- System services do not inherit any context (e.g. environment variables like _HOME_ or _PATH_)  from the invoking user and their session. It runs in a clean execution context. You can check out your environment variables by typing `env` or `systemctl show-environment` in your shell.
+- System services do not inherit any context (e.g. environment variables like _HOME_ or _PATH_)  from the invoking user and their session. It runs in a clean execution context. You can check this out by typing `env` for your local environment variables and `systemctl show-environment` for _systemd_ environment variables in your shell.
 
 ![image](https://user-images.githubusercontent.com/72258375/147947040-10831d0b-76dd-4de5-b026-211c02a3fd85.png)
 
