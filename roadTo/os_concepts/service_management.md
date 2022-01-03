@@ -35,7 +35,7 @@ You can analyze each file full configuration with `systemd-analyze cat-config [P
 At its core, *systemd* manages units, and there is 11 available, highlighted in bold are the most important:
 | Units | Description |
 | --- | --- |
-| Service | **Start and control daemons and processes they consit of, It is the most used** |
+| Service | **Start and control daemons and processes they consist of, most used type** |
 | Socket | **Encapsulate local IPC or network sockets in the system, useful for socket-based activation** |
 | Target | **Useful to group other units through a chain of dependencies** |
 | Device | **Expose kernel devices and may be used to implement device-based activation** |
