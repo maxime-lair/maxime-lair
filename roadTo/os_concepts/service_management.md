@@ -16,7 +16,7 @@ All processes running on the system are child processes of the *systemd* init pr
 
 *systemd* is rather new, as It was developped in 2010 and stable as of 2015. It is rapidly becoming the most used init process, but has some concerns on its inner security.
 
-It will be considered as a system and service manager. For those that haven't noticed, [It is a play on words](https://en.wikipedia.org/wiki/System_D) refering to its quick adapting ability.
+It will be considered as a system and service manager. For those that haven't noticed, [It is a play on words](https://en.wikipedia.org/wiki/System_D) refering to its quick adapting ability, but for real, the **d** in _systemd_ refers to _daemon_, and If you need to refer to it, call it **System daemon**, not **System D**. 
 
 It is hard to define as *systemd* as a good or bad news for Linux. While It is praised by developers and users alike for its reliable parallelism during boot and centralized management of processes, daemons, services and mount points, It strayed away from the UNIX philosophy by its design (e.g. mission creep/bloat feeling).
 
@@ -24,7 +24,7 @@ We will focus on the service management part on *systemd* and the init process w
 
 ## What does systemd manage ?
 
-First, It does *NOT* manage anything in _/etc/init.d/_ ; this thing is GONE. You should never add configuration there, as It will have no effect.
+First, It does *NOT* manage anything in _/etc/init.d/_. You should never add configuration there, as It will have no effect. There is backwards compatibility with SysV init scripts, but they will be not searched in this *deprecated* directory.
 
 You can explore _/etc/systemd/_ instead, It gives an idea of the inner architecture
 
@@ -116,14 +116,110 @@ If you need to have better boot time, you can check what take the longest.
 
 ## Possible state of units
 
+Let's preface it by saying _systemd_ does not communicate with services that have not been started by it. All is managed through a process PID, and used to query and manage the service. If you did not start your daemon through _systemd_, It will be impossible to query its state through _systemd_ commands.
 
+There is two different types of state available on an unit:
+- Loaded : If the unit file has been found, and It is enabled
+- Active : If the unit is running or stopped
+
+Since It is required to load an unit before running it, you need to consider both types to get a unit's status.
+
+### Unit loading
+
+A unit has to be loaded if you need to run it. This state depends entirely on the unit configuration, and It can be one of the following:
+- _loaded_
+- _not-found_ (e.g. not found in the three possibles paths)
+- _bad-setting_
+- _error_ (e.g. set a masked service as enabled for example)
+- _masked_
+
+_An example of bad-setting, where we missed the initial / in the path_
+
+![image](https://user-images.githubusercontent.com/72258375/147968650-9bd9cd7b-0b94-49fb-8e50-ad503c5e111b.png)
+
+After correcting the issue:
+
+![image](https://user-images.githubusercontent.com/72258375/147968759-47a31a53-faa4-4a4e-b573-4ee189ea155b.png)
+
+
+A note on *mask* : It is a stronger version of __disable__ ; It links the unit file to _/dev/null_, making it impossible to start them. It prohibits all kinds of activation, including enablement or manual activation. It can be used to prevent accidentally using a service that conflicts with a running one.
+
+Once It is loaded, It will look in its configuration for its enablement state ([Install] section of the unit file). It hooks the unit into its various suggested places (e.g. the unit is automatically started on boot or when a particular kind of hardware is plugged in).
+
+### Unit activation
+
+Your unit can be either **started** or **stopped**, but It can actually be more refined than that. A unit possesses two levels of activation state: 
+- High-level (often called **active**), and can take the following state:
+  - active
+  - inactive
+  - failed
+  - reloading
+  - activating
+  - deactivating
+- Low-level called **sub**, whose values depend on unit-type specific detailed state of the unit
+You can check what substates is available per unit type with `systemctl --state=help`
+
+![image](https://user-images.githubusercontent.com/72258375/147956854-86cfa91d-400d-4fcc-a0b2-cbb4d027aa14.png)
 
 
 ## Create our own service unit
 
-Ping / Pong
+Let's create our own service unit, which will simply repeat a ping/pong in a file. It will help us understand its state, and how to use a custom file as a service. We could imagine implementing a socket, device, or any other types of units.
+
+Two things to note before we start:
+- System services are **unable** to read from the standard input stream, and when started, It connects its standard input to _/dev/null_ to prevent any interaction.
+- System services do not inherit any context (e.g. environment variables like _HOME_ or _PATH_)  from the invoking user and their session. It runs in a clean execution context. You can check out your environment variables by typing `env` or `systemctl show-environment` in your shell.
+
+![image](https://user-images.githubusercontent.com/72258375/147947040-10831d0b-76dd-4de5-b026-211c02a3fd85.png)
+
+![image](https://user-images.githubusercontent.com/72258375/147975659-7c05a685-07f7-4d8f-874c-64f85ad9b106.png)
+
+
+Now, let's create our service unit, in _/etc/systemd/system_
+
+We will call it pingpong.service:
+
+![image](https://user-images.githubusercontent.com/72258375/147974302-153c544d-31de-4c15-acca-2fbc9d1364d4.png)
+
+We write a simple script, which repeatedly write ping/pong into a named pipe
+
+![image](https://user-images.githubusercontent.com/72258375/147973142-27ffeb3f-dd68-40d8-b472-2bea5b0b77ef.png)
+
+Let's start it ! We check its status beforehand
+
+![image](https://user-images.githubusercontent.com/72258375/147974352-e4c4a47e-4aba-4b02-a87a-d261ef747851.png)
+
+![image](https://user-images.githubusercontent.com/72258375/147974388-671a39d6-d935-464c-88c0-6fa376874925.png)
+
+We can see It created a pipe successfully
+
+![image](https://user-images.githubusercontent.com/72258375/147974408-42dafe1f-baa8-4646-9d41-44d15d196365.png)
+
+The script is not perfect, as It will be blocked if someone else access this pipe, as `read` is blocking. The script location is also not perfect, as It depends on a non-sudo user, and represents a security risk, It would be better to review its permission and put it in _/usr/local/bin_
+
+Let's stop it, and check It deleted our named pipe
+
+![image](https://user-images.githubusercontent.com/72258375/147974591-a4978d79-47de-4e23-9a41-aa39a6d420a3.png)
+
+![image](https://user-images.githubusercontent.com/72258375/147974601-1833498b-dc0f-4ef3-8291-ff406201d7eb.png)
+
+All good ! It's also possible to create a unit template, if you want to create a skeleton of your units.
 
 ## Useful commands
+
+To reload and apply unit changes:
+```
+systemctl daemon-reload
+systemctl restart [UNIT_NAME]
+```
+
+To have an overview of overridden/modified unit files, use `systemd-delta`
+
+![image](https://user-images.githubusercontent.com/72258375/147975270-8f0450b8-b33b-440d-a13a-f129238f199f.png)
+
+To view groupings of processes system-wise, use `systemd-cgls`
+
+![image](https://user-images.githubusercontent.com/72258375/147975420-e30702fc-be4f-4ad4-b830-ac362969dbeb.png)
 
 
 > Credits
@@ -134,8 +230,5 @@ Ping / Pong
 >
 > https://www.computernetworkingnotes.com/linux-tutorials/
 >
-> 
+> https://www.freedesktop.org/software/systemd/man/systemctl.html
 >
-> 
-> 
-> 
