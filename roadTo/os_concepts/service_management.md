@@ -2,7 +2,7 @@
 
 In this article, we will take a look at how service management is used in Linux, first by defining it, understanding its behavior and configuration, and some useful commands.
 
-_Note: Im running a CentOS9 Stream in this article, It came out this very month, I will not be covering UNIX or Windows, only Linux_
+_Note: Im running a CentOS9 Stream in this article, It came out in December 2021, I will not be covering UNIX or Windows, only Linux_
 
 We will be focusing on the newer system *systemd* - we will not talk about its ancestor (sysV) or competitors (upstart..)
 
@@ -18,7 +18,7 @@ All processes running on the system are child processes of the *systemd* init pr
 
 It will be considered as a system and service manager. For those that haven't noticed, [It is a play on words](https://en.wikipedia.org/wiki/System_D) refering to its quick adapting ability, but for real, the **d** in _systemd_ refers to _daemon_, and If you need to refer to it, call it **System daemon**, not **System D**. 
 
-It is hard to define as *systemd* as a good or bad news for Linux. While It is praised by developers and users alike for its reliable parallelism during boot and centralized management of processes, daemons, services and mount points, It strayed away from the UNIX philosophy by its design (e.g. mission creep/bloat feeling).
+It is hard to define *systemd* as a good or bad news for Linux. While It is praised by developers and users alike for its reliable parallelism during boot and centralized management of processes, daemons, services and mount points, It strayed away from the UNIX philosophy by its design (e.g. mission creep/bloat feeling).
 
 We will focus on the service management part on *systemd* and the init process will be covered in another article.
 
