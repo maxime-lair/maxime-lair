@@ -97,5 +97,5 @@ The main project is to build an entire devops infrastructure, with docker, cloud
 2. [Build my own infrastructure](projectBob/pfsense)
 3. [QoL improvements](projectBob/)
 - [x] [tmux with tmuxinator](projectBob/tmux)
-- [ ] [Ozsh theme (WIP)](https://github.com/maxime-lair/zsh_p10k_custom_configuration)
+- [x] [Ozsh theme](https://github.com/maxime-lair/zsh_p10k_custom_configuration)
 - [x] [Web page for binsh.io](https://github.com/maxime-lair/binsh)
