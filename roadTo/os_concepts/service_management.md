@@ -24,7 +24,7 @@ We will focus on the service management part on *systemd* and the init process w
 
 ## What does systemd manage ?
 
-First, It does *NOT* manage anything in _/etc/init.d/_. You should never add configuration there, as It will have no effect. There is backwards compatibility with SysV init scripts, but they will be not searched in this *deprecated* directory.
+First, It does *NOT* manage anything in _/etc/init.d/_. You should never add configuration there, as It will have no effect. There is backwards compatibility with SysV init scripts, but they will not be searched in this *deprecated* directory.
 
 You can explore _/etc/systemd/_ instead, It gives an idea of the inner architecture
 
