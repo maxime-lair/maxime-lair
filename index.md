@@ -16,7 +16,7 @@ I will try to focus on the inner architecture and useful commands, without divin
    - [Memory and storage](roadTo/os_concepts/memory_and_storage)
    - [IO management](roadTo/os_concepts/IO_management)
    - [Service management](roadTo/os_concepts/service_management)
-   - Startup management (Initd)
+   - [Startup management (Initd)](roadTo/os_concepts/startup_management)
    - Posix Basics
    - Virtualization
    - Threads and concurrency
