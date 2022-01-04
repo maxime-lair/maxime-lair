@@ -54,15 +54,13 @@ First, let's understand what are _cgroups_, as they are an essential feature of 
 
 Main version difference is: unlike v1, _cgroup v2_ has only a single process hierarchy and discriminates between processes, not threads.
 
-One of the design goals of _cgroups_ is to provide a unified interface, from controlling single processes (e.g. by using `nice`) to full operating system-level virtualization (e.g. LXC or docker).
-
-_cgroups_ provides:
+One of the design goals of _cgroups_ is to provide a unified interface, from controlling single processes (e.g. by using `nice`) to full operating system-level virtualization (e.g. LXC or docker), in order to provide:
 - Resource limiting
 - Prioritization
 - Accounting
 - Control
 
-A control group (_cgroup_) is a collection of processes that are bound by the same criteria and associated with a set of parameters or limits. The kernel provides access to multiple controllers through the _cgroup_ interface, like RAM or CPU usage.
+A control group (_cgroup_) is a collection of processes that are bound by the same criteria and associated with a set of parameters or limits. The kernel provides access to multiple controllers through the _cgroup_ interface, these controllers can be Block IO, CPUSETS, HugeTLB, Memory, Network, Process number or RDMA.
 
 You can check these collections through **systemd** with two commands: 
 
@@ -82,16 +80,56 @@ There is also the `tc` command, a user-space utility program used to configure l
 
 Various projects use _cgroups_ as their basis, including **Docker**, **Hadoop**, **Kubernetes**, **systemd**
 
-WIP
+You can find your currently defined cgroups in _/sys/fs/cgroup_ directory
+
+![image](https://user-images.githubusercontent.com/72258375/148071480-c004e04d-5c9b-4490-bd6d-38254596eae2.png)
+
+Notice how we find back our cgroup defined by _system.slice_ ; It itself will contain more cgroups defined in its hierarchy
+
+![image](https://user-images.githubusercontent.com/72258375/148071867-57f9a276-b95f-4354-bdda-072114f1a9e5.png)
+
+And its controllers (or subystem):
+
+![image](https://user-images.githubusercontent.com/72258375/148072072-cd7c2160-6c08-45f3-869a-4d6e173503b1.png)
 
 
 ### System.slice
 
-WIP
-  
-  
-  
+Now that we understand how cgroups is used to limit ressources usage per task groups, we can check how It works when our system starts up.
+
+We can check which units our _system.slice_ is directly responsible for:
+
+![image](https://user-images.githubusercontent.com/72258375/148075444-69ae40e9-e0d6-47f8-8baa-7d0c8990478f.png)
+
+_system.slice_ is part of the four ".slice" units which form the basis of the hierarchy for assignment of resources for services, users and virtual machines/containers.
+
+| Slice unit | Description |
+| --- | --- |
+| -.slice | Root of the slice hierarchy, does not usually contain units directly but may be used to set defaults for the whole tree |
+| system.slice | By default, all system services started by **systemd** are found in this slice |
+| user.slice | By default, all user processes and services started on behalf of the user |
+| machine.slice | By default, all virtual machines/containers registered with *systemd-machined* are found in this slice |
+
+## Bootup process
+
+Now that we understand how _.slice_ units are used to control process resources through cgroups hierarchy tree, we go back to our _default.target_ critical-chain
+
+![image](https://user-images.githubusercontent.com/72258375/148084906-a272df62-d4d9-4932-9717-caece6135914.png)
+
+Let's analyze each step to understand our bootup process.
+
+
+
+
+
+
+
+
+
+
 ## Change target
+
+Now that we understand how our bootup process works in order to reach our _default.target_ , how do we reverse that to make the system stop ?
 
 **systemd** gives you the ability to change to a different target unit in the current session (requires `root`).
 
@@ -125,6 +163,13 @@ A few differences to note:
 
 ![image](https://user-images.githubusercontent.com/72258375/147993247-392abb0c-0e6f-4e5a-8cab-e9301bae7fe5.png)
 
+
+## Conclusion
+
+We discovered how **systemd** takes you from the system bootup process to his _default.target_ and how we can change this target to shutdown our system. There is much more to fully uncover this startup process, for example by applying cgroups to limit resources usage on a specific target.
+
+Feel free to check out the credits below, as there were helpful in uncovering the surrounding shroud around **systemd startup process**.
+
 > Credits
 > 
 > https://en.wikipedia.org/wiki/Systemd
@@ -136,3 +181,5 @@ A few differences to note:
 > https://www.freedesktop.org/software/systemd/man/systemctl.html
 > 
 > https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/cgroups.html
+>
+> https://systemd.io
