@@ -1,4 +1,4 @@
-# Service management
+# Start-up management
 
 In this article, we will take a look at how init management is used in Linux, first by defining it, understanding its behavior and configuration, and some useful commands.
 
