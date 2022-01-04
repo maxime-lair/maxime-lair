@@ -82,12 +82,12 @@ There is also the `tc` command, a user-space utility program used to configure l
 
 Various projects use _cgroups_ as their basis, including **Docker**, **Hadoop**, **Kubernetes**, **systemd**
 
-<WIP>
+WIP
 
 
 ### System.slice
 
-<WIP>
+WIP
   
   
   
