@@ -110,7 +110,7 @@ There is many more examples, but this is the reason why you need to ensure your 
 Most linux distribution conform to **FHS** (Filesystem Hierarchy Standard), which defines a stricter set of rules to define the directory structure.
 
 POSIX defines a few guidelines on this structure:
-- Applications should not be written files in `/` or `/dev`
+- Applications should not be writing files in `/` or `/dev`
 - `/tmp` should be made available for applications in need of temporary files creation.
 - `/dev/null` is an infinite data sink, data written to or reads from this path should always return *EOF*
 - `/dev/tty` Synonym for controlling terminal associated with the process group of that process
@@ -119,7 +119,7 @@ POSIX defines a few guidelines on this structure:
 
 POSIX defines two regular expression syntax, called **BRE** (Basic) and **ERE** (Extended).
 
-**BRE** provides extensions to achive consistency between utility programs such as `grep` or `sed`.
+**BRE** provides extensions to achieve consistency between utility programs such as `grep` or `sed`.
 
 In BRE, It defines the following syntax:
 
