@@ -49,7 +49,7 @@ It will print the variable value depending on its parameters
 
 While there is a few more, for example to search and replace, It is interesting to know It is POSIX compliant to do so.
 
-Be careful with `unset` as It is not compliant on arrays (only variables and functions)
+Be careful with `unset` as It is not compliant on arrays (only variables and functions) and `declare`
 
 ## Environment variables
 
