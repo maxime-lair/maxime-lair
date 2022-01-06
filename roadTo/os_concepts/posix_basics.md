@@ -25,7 +25,15 @@ When writing scripts/programs to rely on POSIX standards, you ensure to port the
 
 The shell is a command language interpreter, which includes a syntax used by the `sh` utility.
 
-**WIP**
+The difference between `#!/bin/bash` and `#!/bin/sh` is slim, as It spawns from the same binary:
+
+![image](https://user-images.githubusercontent.com/72258375/148414947-202f59df-4b7a-460e-b64e-94a33888635a.png)
+
+![image](https://user-images.githubusercontent.com/72258375/148415029-dd97433f-9246-4791-9382-28b1f7b6d908.png)
+
+Using `sh` is simply having `bash` with [`--posix` option](https://tiswww.case.edu/php/chet/bash/POSIX) after startup files are read. These startup files are the ones read and executed from the expanded `ENV` variable. 
+
+It is not the case on every OS though, `busybox` can link `sh` to a [different shell](https://en.wikipedia.org/wiki/Almquist_shell), but one common point they all have is having a `/bin/sh`. This is why in our case, It is better to use `sh` as a shell basis for our scripts.
 
 ## Variable expansion
 
@@ -149,6 +157,27 @@ While defining character classes that are used **within brackets**
 | [:space:] |	[ \t\n\r\f\v] |	blank (whitespace) characters | 
 
 And the more advanced **extended** regular expressions can sometimes be used with Unix utilities (`grep -E`, `sed -E`, or default in `awk`), the main difference is that some backlashes are removed, and non-greedy quantifiers (?)
+
+## Shell syntax
+
+Let's use [`Shellcheck`](https://github.com/koalaman/shellcheck) and test some commands to see how to write POSIX compliant code. It assumes you are somewhat familiar with shell scripting.
+
+The script:
+
+![image](https://user-images.githubusercontent.com/72258375/148436205-c424f51b-eedd-402a-a5e2-407420338fc6.png)
+
+The execution:
+
+![image](https://user-images.githubusercontent.com/72258375/148436264-e913a984-adae-436a-8083-86dccea354f7.png)
+
+Shellsheck:
+
+![image](https://user-images.githubusercontent.com/72258375/148436321-0e81fee4-913c-4e9a-a0db-1c479beaf697.png)
+
+In the end, some rules to remember are: 
+- Use `test` or single bracket for comparison. Use gt/lt for numbers, and avoid strings comparison with `==`.
+- Do not use arrays, and do not use `declare` `let` `typeset` or blank spaces when declaring variables
+- Always quote strings, and use `printf` instead of `echo`
 
 ## Conclusion
 
