@@ -42,11 +42,11 @@ Hardware virtualization specialize in efficiently employ underused physical hard
 
 CPU virtualization emphasizes performance and runs directly on the processor whenever possible. The goal is to reduce the overhead when running instructions from the virtual layer compared to instructions on the hardware layer.  
 
-## IOMMU infrastructure
+### IOMMU infrastructure
 
 Having a memory controller with IOMMU will speed up virtualization instructions by reducing the amount of context switch, resulting in little to no difference compared to running hardware machine. This is often advertised as **Intel VT-d** or **AMD-Vi**. IOMMU is what made it all possible. It is an unit which allows guest virtual machines to directly use hardware devices through DMA and interrupt mapping. Be careful on this, as while this is a CPU unit, It requires motherboard chipset and system firmware (BIOS or UEFI) support to be usable.
 
-### IOMMU goal
+#### IOMMU goal
 
 In a virtualization environment, the I/O operations of I/O devices of a (virtual) guest OS are translated by their hypervisor (software-based I/O address translation). It results naturally in a negative performance impact.
 
@@ -74,10 +74,26 @@ There is two memory management units in a CPU:
 
 In order to provide this feature, *IOMMU* provides two functionalities, DMA remapping and interrupt remapping.
 
-### IOMMU DMA remapping
+#### IOMMU DMA remapping
+
+In order to understand how *DMA* works, and why It is so effective, we need to do a recap of how memory works in our system.
+
+Physical memory is divided into discrete units called *pages*. Much of the system's internal handling of memory is done on a per-page basis. Page size varies, but usually use 4kB pages.
+
+![image](https://user-images.githubusercontent.com/72258375/148575500-2ffbb7c7-d2b9-4e55-83be-0c2d718df0a9.png)
+
+This means that If you look at a memory address, virtual or physical, It is divisible into a page number and an offset within the page.  One example will explain it more easily how paging works:
+
+![image](https://user-images.githubusercontent.com/72258375/148585428-5172901e-5f9c-454c-9cec-798bc401493b.png)
+
+One note on *TLB*, since page tables are hold in memory, every data/instruction acccess requires 2 memory accesses (One for virtual address, one for physical address), and memory accesses are much slower than instruction execution in CPU. To accelerate the translation mechanism, a small fast-lookup hardware cache is added close to CPU, and this is called the *Translation look-aside buffer* or **TLB**, It contains the most common of the page-table entries. In the screenshot below, you will notice It is noted *Huge*, simply because 4KB is often not enough in today's context, so we created bigger pages.
+
+![image](https://user-images.githubusercontent.com/72258375/148585868-435cee8a-47c4-459f-a58a-f6a2019a7ab6.png)
 
 
-### IOMMU interrupt remapping
+
+
+#### IOMMU interrupt remapping
 
 
 
@@ -105,10 +121,10 @@ In order to provide this feature, *IOMMU* provides two functionalities, DMA rema
 > 
 > https://lenovopress.com/lp1467.pdf
 > 
+> https://www.cs.cornell.edu/courses/cs4410/2016su/slides/lecture11.pdf
 > 
+> https://www.oreilly.com/library/view/linux-device-drivers/0596005903/ch15.html
 > 
-> 
-> 
-> 
+> https://www.kernel.org/doc/html/latest/core-api/dma-api-howto.html
 > 
 > https://www.infrapedia.com/app
