@@ -37,8 +37,8 @@ The rise of the service design patterns made it all the more effective under Moo
 
 Hardware virtualization specialize in efficiently employ underused physical hardware by allowing different computers to access a shared pool of resources. There is a few components to note:
 - The hardware layer, often called **host**, contains the physical server components, It can be CPU, memory, network and disk drives. It requires an x86-based system with at least one CPU
-- The hypervisor creates a virtualization layer that runs between the OS and the server hardware, and acts as a buffer between the host and the virtual machines. It isolates the virtual components from their physical counterparts
-- Virtual machines are software emulations of a computing hardware environment, and provide the same functionalities of a physical computer. They are often called *guest machine* and consist of virtual hardware, guest OS and guest applications
+- The **hypervisor** creates a virtualization layer that runs between the OS and the server hardware, and acts as a buffer between the host and the virtual machines. It isolates the virtual components from their physical counterparts
+- **Virtual machines** are software emulations of a computing hardware environment, and provide the same functionalities of a physical computer. They are often called *guest machine* and consist of virtual hardware, guest OS and guest applications
 
 CPU virtualization emphasizes performance and runs directly on the processor whenever possible. The goal is to reduce the overhead when running instructions from the virtual layer compared to instructions on the hardware layer.  
 
@@ -66,8 +66,6 @@ It is made available thanks to a **hardware-assisted component** called *IOMMU*.
 
 ![image](https://user-images.githubusercontent.com/72258375/148470128-6ff475ae-6eef-42db-81ec-7aede56cb8f9.png)
 
-*Note:* IOMMU is physically present inside the CPU, but It is easier to represent it like this for now.
-
 There is two memory management units in a CPU:
 - MMU (*Memory management unit*), to translate *CPU-visible virtual address* <-> *physical address*
 - IOMMU (*Input output memory management unit*), to translate *device-visible virtual address* <-> *physical address*
@@ -90,21 +88,50 @@ One note on *TLB*, since page tables are hold in memory, every data/instruction 
 
 ![image](https://user-images.githubusercontent.com/72258375/148585868-435cee8a-47c4-459f-a58a-f6a2019a7ab6.png)
 
+Now that we know how memory is translated from virtual to physical realm, let's dive into the **DMA** topic. **DMA**, or direct memory access, is the hardware mechanism that allows peripheral components to transfer their I/O data directly to and from main memory without the need to involve the system processor. A great deal of computational overhead is eliminated as the use of this mechanism can greatly increase throughput to and from a device.
 
+Without DMA, on any I/O operations, the CPU is typically fully occupied for the entire duration of the read and write operation, and is thus unavailable to perform other work. With DMA, the CPU first initiates the transfer then It does other operations while the transfer is in progress, and It finally receives an interrupt from the DMA controller when the operation is done. **DMA** does not only exist on CPU, but on many hardware systems such as disk drive controllers, graphics cards, network cards and sound cards. 
 
+On PCI architecture, any PCI device can request control of the bus and request to read from and write to system memory. One issue is often the size of the address bus, as It can be unable to address memory above a certain line, and that's where the IOMMU comes into play with its previously seen address translation mechanism.
+
+The idea of IOMMU DMA remapping is the same as the MMU for address translation.
 
 #### IOMMU interrupt remapping
 
+An **interrupt** is a response by the CPU to an event that needs attention from the software. It is commonly used by hardware devices to indicate electronic or physical state changes that require time-sensitive attention.
 
+A **MSI**, or message signalled interrupts, are an alternative in-band method of signalling an interrupt. It allows devices to save up on an interrupt line (pin), as It uses in-band signalling to exchange special messages that indicates interrupts through the main data path. Fewer pins makes for a simpler, cheaper and more reliable connector. PCI Express only uses *MSI* for example as It presents a slight performance advantage.
+
+Device can trigger interrupt by performing a DMA to dedicated memory range (*0xFEE00000 - 0xFEEFFFFF on x86*). This means a virtual machine can program device to perform arbitrary interrupts. Without it, IOMMU cannot distinguish between genuine *MSI* from the device and a DMA pretending to be an interrupt.
 
 ### Full virtualization
 
+Now that we understand how IOMMU came into play to enhance virtual machine performance, let's check some relevant approach to virtualization technology. 
+
+In **Full virtualization**, hardware is emulated to the extent that unmodified guest OS can run on the virtualization platform. Normally, this means that various hardware devices are emulated. Such virtualization platform attempts to run as many instructions on the native CPU as possible (which is a lot faster than CPU emulation). Many of these platforms require CPU extensions to assist virtualization such as an IOMMU.
+
+The hardware architecture is completely simulated, and the guest OS is unaware that It is in a virtualized environment, and therefore hardware is virtualized by the host OS so that the guest can issue commands to what It thinks is actual hardware. However, these are just simulated hardware devices created by the host, and the hypervisor translates all OS calls. It isolates VMs from the host OS and one another, enabling total portability of VMs between hosts regardless of underlying hardware.
+
+It is often called *type-1 bare-metal* virtualization. It offers the best isolation and security for virtual machines. A few products to name them: KVM, ESXi, Hyper-V or Xen.
 
 ### Paravirtualization
 
+**OS Assisted Virtualization** is another approach to virtualization technology, where the guest OS is ported to the hypervisor, a layer sitting between the hardware and virtualized systems. Since It doesn't require full device emulation or dynamic recompiling to catch privileged instructions, It is usually performing at a near-native speed.
 
+While the value proposition of paravirtualization is in lower virtualization overhead, its compatibility and portability is poor.
+
+It is often called *type-2* virtualization. A few products use this technology, like QEMU, Xen, VirtualBox or VMWare workstation.
 
 ## Desktop virtualization
+
+While not as popular as full-virtualization, **desktop virtualization** is a method of simulating a user workstation so It can be accessed from a remotely connected device. By abstracting the user desktop in this way, organizations can allow users to work from virtually anywhere with a network connecting to access enterprise resources without regard to the device or operating system employed by the remote user. It skyrocketed to popularity during the COVID pandemic and all the work-from-home habits. 
+
+Since the user devices is basically a display, keyboard and mouse, a lost or stolen device presents a reduced risk to the organization. All user data and programs exist in the desktop virtualization server and not on client devices.
+
+There is three types of desktop virtualization:
+- Virtual desktop infrastructure (VDI)
+- Remote desktop services (RDS)
+- Desktop-as-a-service (DaaS)
 
 
 ## Containerization
