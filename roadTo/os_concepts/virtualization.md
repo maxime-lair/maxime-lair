@@ -147,9 +147,12 @@ Containers are an abstraction at the application layer that packages code and de
 
 Containers use a form of operating system virtualization, but they leverage features of the host operating system to isolate processes and control their access to physical devices. While the technology has been around for decades, the introduction of Docker in 2013 changed the common consensus.
 
-Containers are made available through two Kernel features:
-- Namespaces
-- Cgroups
+Containers are made available through a few Kernel features, mainly:
+| Kernel features | Description |
+| --- | --- |
+| Kernel namespaces | It wraps a global system resource in an abstraction that makes it appear to the processes within the namespace that they have their own isolated instance of the global resource |
+| Seccomp | Provides application sandboxing mechanism. It allows one to configure actions to take for matched syscalls |
+| CGroups (control groups) | Used to restrict resource usage for a container and handle device access. It restrict cpu, memory, IO, pids, network and RDMA resources for the container |
 
 There is a few containers projects to note:
 - LXC (System containers without the overhead of running a kernel) - also called **Linux containers**
@@ -159,24 +162,86 @@ There is a few containers projects to note:
 
 It is interesting to note that, while Docker has been synonymous with containers from the beginning, It might change in the coming years. Kubernetes announced last year that they will shift from Docker Runtime to the *Container Runtime Interface* as defined by the *Open Container Initiative*, which supports a broader set of container runtimes with smooth interoperability. It will open the way for Docker competitors in the future (or not).
 
-### System containers
+### Container manager
 
-We will focus on the container implementation of LXC/LXD, which are Linux kernel containment features.
+First, check out this **containerd** architecture:
+
+![image(2)](https://user-images.githubusercontent.com/72258375/148648926-50dadb1a-71fd-46c1-b1b1-79d1d534c325.png)
+
+It gives out a nice top-level overview of how a system (whether It's Windows or Linux) interact with its containers (whether they are docker, from cloud providers, or from k8s).
+
+Why am I talking about **containerd** ?  Docker (or containers) is a cluster of various utilities doing a wide variety of things hidden under the hood. Simply typing `docker run webserver` is great for users, but bad to understand its inner architecture. A great article about this is [here](https://iximiuz.com/en/posts/container-learning-path/) and this part will simply reflect what I learnt from it.
+
+**containerd** is meant to be a simple daemon that will manage your containers and shims so they can run on any system. This manager will be the sticking glue between all your containers and the underlying system. It focuses on handling multiple containers so they can co-exist happily. It will handle all the boring part you don't think of, like :
+- Image push and pull support
+- Interfaces creation, modification and deletion
+- Management of network namespaces containers to join existing ones.
+- Storing container logs and snapshots
+- Support of container runtime and lifecycle
+
+Picture an apartment building. The hardware and system could be considered the ground, where utilities such as electricity (CPU), water (Storage) and heating (RAM) comes from. The building is the container manager, allowing each unit to co-exist by appointing each resource. Each apartment is the container runtime, that possess its own layout (configuration), and host a tenant. The container is this tenant who will use the available resource to conduct its lifecycle.
+
+Most interactions with the Linux and Windows container feature sets are handled a container runtime, often via **runc** and/or OS-specific libraries.
+
+### Container runtime
+
+Also called **OCI runtime**, there is a [specification for it](https://github.com/opencontainers/runtime-spec/blob/main/spec.md) to specify the configuration, execution environment and lifecycle of a container.
+
+For example, In each container, to name a few specification:
+- In the filesystem, the following directory should be available: */proc /sys /dev/pts /dev/shm*
+- Following devices should be supplied: */dev/null /dev/zero /dev/full /dev/random /dev/tty*
+- Possess a status which may be : *creating created running stopped*
+- Run through the following lifecycle: *Create -> createRuntime -> createContainer -> startContainer -> delete -> poststop*
+
+A container runtime can be considered the client part that will interact with its container manager. To start a containerized process, It happens in two steps: we create the container, then we run the process inside it. To create the container, we need to create namespaces (to isolate it from others), configure cgroups (to limit its ressource usage), etc. That's what the **container runtime** will do. It knows how to create such boxes and how to interact with them since he created it.
+
+Some folks also call this brick : *low-level container runtimes* since they only handle container execution. *High-level container runtimes* would handle image format/management/sharing like *containerd* does, but It is just confusing, so I prefer to separate them into manager and runtime. It is difficult to name them on high/low scale, because **docker** runs **containerd** which runs **runc**, add a container orchestration tool on top of it, and you are stuck in a maze of naming conventions.
+
+You can even add programs that will stand in-between the *container runtime* and the *container manager*, they are called *shim*.
+
+An architecture top-level overview (correct me If I'm wrong, It's difficult to place everything correctly.
+
+![image](https://user-images.githubusercontent.com/72258375/148654440-4126b153-2134-407c-9ba1-5d8e41fadf31.png)
+
+### Linux containers
+
+> A container is an isolated (namespaces) and restricted (cgroups, capabilities, seccomp) process.
+
+This phrase recaps what we learned of containers so far, but It is not necessarily true. In theory, they are an isolated and restricted **environments** to run on or many processes inside. This means projects like [Kata](https://katacontainers.io/) implements container without using namespaces or cgroups but full-fledged VMs and be used by Kubernetes for example.
+
+Here, we will focus on the most popular kind of containers, which are Linux containers. Here we could use *LXC* to illustrate it, but let's not forget that It is a set of user-land utilities, we can just try to use kernel features instead to reproduce it (not as well of course).
+
+Let's create a namespace and a cgroup and launch an application inside. Since we will be using kernel features, I will use  `root` user for simplification.
+
+Let's define what I want to run: `</dev/zero head -c 5000m | tail` - It will fill 5G of RAM on the system
+
+I'm using cgroups v2 for this, be sure to check what your kernel version has with:
+
+![image](https://user-images.githubusercontent.com/72258375/148658579-8556d38c-4372-4d6a-9f62-d40da09ac3ec.png)
+
+I tried to create a script to do it, but after a few hours I stopped trying.. I don't really understand why I'm unable to write into *cgroup.procs*, probably because I execute the command from the terminal and the process spawns in the cgroup session. But you see the kind of process It does..
 
 
+The script:
 
-### Application containers
+![image](https://user-images.githubusercontent.com/72258375/148662221-c17d9df2-2f8e-4dff-9d04-3eafb2414977.png)
 
-Here we will focus on the docker implementation for containers.
+The result:
 
+![image](https://user-images.githubusercontent.com/72258375/148662230-20c311ee-de9c-452f-afbb-4af6ec6c598b.png)
 
+WIP: ADD NAMESPACES
+
+### Containers images
+
+Explain how bundles/images are built
 
 
 ### The next step
 
 The technology is still very new, as demonstrated with the google trends of Docker and K8:
 
-![image](https://user-images.githubusercontent.com/72258375/148616420-d940fa69-9e12-4b71-8f18-dca2af1c1bbe.png)
+![image(1)](https://user-images.githubusercontent.com/72258375/148643178-ccedc223-156e-434b-abb1-96c74d454595.png)
 
 There is still many work to do in order to ensure containers monitoring, provisionning and orchestration. They are indeniably the way we will package applications in the future, as It is much more adaptable to a Cloud environment where hardware requires to be elastic to answer a growing organization needs.
 
@@ -203,4 +268,11 @@ This concludes the introduction to virtualization as a concept. While I did not 
 > https://ubuntu.com/blog/what-is-virtualisation-the-basics
 >
 > https://www.docker.com
-
+>
+> https://containerd.io
+>
+> https://www.youtube.com/watch?v=sK5i-N34im8 // cgroups,namespaces and beyond: what are containers made from ? By J. Petazzoni
+> 
+> https://jvns.ca/blog/2016/10/10/what-even-is-a-container/
+> 
+> https://iximiuz.com
