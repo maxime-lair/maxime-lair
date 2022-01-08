@@ -46,6 +46,8 @@ CPU virtualization emphasizes performance and runs directly on the processor whe
 
 Having a memory controller with IOMMU will speed up virtualization instructions by reducing the amount of context switch, resulting in little to no difference compared to running hardware machine. This is often advertised as **Intel VT-d** or **AMD-Vi**. IOMMU is what made it all possible. It is an unit which allows guest virtual machines to directly use hardware devices through DMA and interrupt mapping. Be careful on this, as while this is a CPU unit, It requires motherboard chipset and system firmware (BIOS or UEFI) support to be usable.
 
+A note on **SR-IOV** - It is a chipset feature which allows scalability of devices on virtual platforms. In IOMMU, virtual devices are mapped directly to their physical devices for performance reasons, but It limits the number of virtual machine to your number of hardware devices. *SR-IOV* solve this by allowing splitting one PCI device to many virtual ones without performance drop via parallelized direct IO access.
+
 #### IOMMU goal
 
 In a virtualization environment, the I/O operations of I/O devices of a (virtual) guest OS are translated by their hypervisor (software-based I/O address translation). It results naturally in a negative performance impact.
@@ -129,16 +131,58 @@ While not as popular as full-virtualization, **desktop virtualization** is a met
 Since the user devices is basically a display, keyboard and mouse, a lost or stolen device presents a reduced risk to the organization. All user data and programs exist in the desktop virtualization server and not on client devices.
 
 There is three types of desktop virtualization:
-- Virtual desktop infrastructure (VDI)
-- Remote desktop services (RDS)
-- Desktop-as-a-service (DaaS)
-
+- Virtual desktop infrastructure (VDI) - either on-premises or in the cloud, It manages the desktop virtualization server as they would any other application server
+- Remote desktop services (RDS) - runs a limited number of virtualized applications which are streamed to the local device, offers a higher density of users per VM
+- Desktop-as-a-service (DaaS) - shifts the burden of providing desktop virtualization to service providers, depends on IT expenses/needs
 
 ## Containerization
 
+Containers and virtual machines have similar resource isolation and allocation benefits, but function differently because containers virtualize the operating system instead of hardware. This makes containers more portable and efficient. They can be considered a lighter-weight, more agile way of handling virtualization since they don't use a hypervisor.
+
+To re-use the previous figure, containers run like this:
+
+![image](https://user-images.githubusercontent.com/72258375/148616045-1f0aad36-6c98-4a2d-ae69-fcd2a8cd887a.png)
+
+Containers are an abstraction at the application layer that packages code and dependencies together. They take up less space than VMs (typically tens of MBs in size) and can handle more applications. It is all from the benefits of reducing the operating system redundancy/overhead included in VM. Containerization packages together everything needed to run a single application (along with runtime libraries they need to run). The container includes all the code, its dependencies and even the operating system itself. This enables applications to run almost anywhere. 
+
+Containers use a form of operating system virtualization, but they leverage features of the host operating system to isolate processes and control their access to physical devices. While the technology has been around for decades, the introduction of Docker in 2013 changed the common consensus.
+
+Containers are made available through two Kernel features:
+- Namespaces
+- Cgroups
+
+There is a few containers projects to note:
+- LXC (System containers without the overhead of running a kernel) - also called **Linux containers**
+- Docker containers (cross-platform, standalone executable packages)
+- Snaps (Single machine deployment for fleet of IoT devices)
+- Tanzu (VMWare container solution)
+
+It is interesting to note that, while Docker has been synonymous with containers from the beginning, It might change in the coming years. Kubernetes announced last year that they will shift from Docker Runtime to the *Container Runtime Interface* as defined by the *Open Container Initiative*, which supports a broader set of container runtimes with smooth interoperability. It will open the way for Docker competitors in the future (or not).
+
+### System containers
+
+We will focus on the container implementation of LXC/LXD, which are Linux kernel containment features.
+
+
+
+### Application containers
+
+Here we will focus on the docker implementation for containers.
+
+
+
+
+### The next step
+
+The technology is still very new, as demonstrated with the google trends of Docker and K8:
+
+![image](https://user-images.githubusercontent.com/72258375/148616420-d940fa69-9e12-4b71-8f18-dca2af1c1bbe.png)
+
+There is still many work to do in order to ensure containers monitoring, provisionning and orchestration. They are indeniably the way we will package applications in the future, as It is much more adaptable to a Cloud environment where hardware requires to be elastic to answer a growing organization needs.
 
 ## Conclusion
 
+This concludes the introduction to virtualization as a concept. While I did not dive into the different linux technologies such as QEMU or Virt-lib, I was much more interested in understanding how IOMMU was working at the hardware level. I tried to avoid including too many details, and stayed with a top-level overview of each concepts. It's a bit difficult to understand how they work architecturally, as many articles focus more on the code structure, or options. I'm happy with the page translation drawing I did, as It was not something clear to me for a long time. I hope It helped into understanding how virtualization is used, and how It will continue to evolve over the next decade.
 
 > Credits
 > 
@@ -155,3 +199,8 @@ There is three types of desktop virtualization:
 > https://www.kernel.org/doc/html/latest/core-api/dma-api-howto.html
 > 
 > https://www.infrapedia.com/app
+>
+> https://ubuntu.com/blog/what-is-virtualisation-the-basics
+>
+> https://www.docker.com
+
