@@ -18,7 +18,7 @@ I will try to focus on the inner architecture and useful commands, without divin
    - [Service management](roadTo/os_concepts/service_management)
    - [Startup management (Initd)](roadTo/os_concepts/startup_management)
    - [Posix Basics](roadTo/os_concepts/posix_basics)
-   - Virtualization
+   - [Virtualization](roadTo/os_concepts/virtualization)
    - Threads and concurrency
    - Sockets
    - Networking concepts
