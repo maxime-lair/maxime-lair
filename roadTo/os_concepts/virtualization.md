@@ -211,7 +211,7 @@ This phrase recaps what we learned of containers so far, but It is not necessari
 
 Here, we will focus on the most popular kind of containers, which are Linux containers. Here we could use *LXC* to illustrate it, but let's not forget that It is a set of user-land utilities, we can just try to use kernel features instead to reproduce it (not as well of course).
 
-Let's create a namespace and a cgroup and launch an application inside. Since we will be using kernel features, I will use  `root` user for simplification.
+Let's create a cgroup and launch an application inside. Since we will be using kernel features, I will use  `root` user for simplification.
 
 Let's define what I want to run: `</dev/zero head -c 5000m | tail` - It will fill 5G of RAM on the system
 
@@ -219,23 +219,14 @@ I'm using cgroups v2 for this, be sure to check what your kernel version has wit
 
 ![image](https://user-images.githubusercontent.com/72258375/148658579-8556d38c-4372-4d6a-9f62-d40da09ac3ec.png)
 
-I tried to create a script to do it, but after a few hours I stopped trying.. I don't really understand why I'm unable to write into *cgroup.procs*, probably because I execute the command from the terminal and the process spawns in the cgroup session. But you see the kind of process It does..
+The following script took me a few hours, as I had to *realllyy* read the kernel documentation on **cgroups v2**. Main issue was the [*No internal Process Constraint*](https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html#no-internal-process-constraint) which make it so when you want to create a new cgroup and switch process inside it, you have to start from the root cgroup, because starting from any other cgroup requires you to switch all your running processes into the newly created one before doing anything (like adding memory control onto its *subtree_control* file).
 
-
-The script:
-
-![image](https://user-images.githubusercontent.com/72258375/148662221-c17d9df2-2f8e-4dff-9d04-3eafb2414977.png)
+The script switch your shell into the root cgroup, run the command, switch the process into our new cgroup, let it run for a few seconds, then re-switch back to the original cgroup. It's not perfect of course, feel free to comment on it. [Code available here](https://github.com/maxime-lair/maxime-lair/blob/main/roadTo/os_concepts/cgroup_script.sh)
 
 The result:
+![cgroup](https://user-images.githubusercontent.com/72258375/148699324-a3dec693-9d28-4d4a-ae8c-0d2a855c15bd.gif)
 
-![image](https://user-images.githubusercontent.com/72258375/148662230-20c311ee-de9c-452f-afbb-4af6ec6c598b.png)
-
-WIP: ADD NAMESPACES
-
-### Containers images
-
-Explain how bundles/images are built
-
+Feel free to add namespaces on top of it, use `unshare` command to add it
 
 ### The next step
 
@@ -276,3 +267,5 @@ This concludes the introduction to virtualization as a concept. While I did not 
 > https://jvns.ca/blog/2016/10/10/what-even-is-a-container/
 > 
 > https://iximiuz.com
+>
+> http://slides.com/chrisdown/avoiding-bash-pitfalls-and-code-smells
