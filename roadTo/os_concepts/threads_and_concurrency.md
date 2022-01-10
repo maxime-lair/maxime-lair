@@ -49,45 +49,89 @@ It is used by [**Akka**](https://doc.akka.io/docs/akka/current/typed/guide/actor
 
 Why use them in threads if they are not going to have a shared state then ? Because It will be able to execute asynchronously and distributed by design. It alleviates the code from having to deal with explicit locking and thread management. There is a few implementations possible, namely *thread-driven actors* and *event-driven actors*.
 
-Let's create a simple program, which will receive a list of string, and return each bcrypt hash. Each hash calculation has to be done by an actor.
-
-
-
-
-
 #### Boss/workers pattern
 
-Used by NodeJS and Nginx
+This model is more popular, as It depicts a single thread (the boss) that acts as the scheduler and create workers on the fly. It is used notably by **NodeJS** and **NGinx** as It is easy to implement on an *Event-based* program. The boss accepts input for the entire program, and based on the input passes off tasks to one or more worker threads. He's often the one that creates them, and wait for each of them to finish. There is multiple implementations, with or without a thread pool.
 
-Boss acts as the thread manager, workers perform tasks
+Let's create a simple program, which will receive a list of string, and return each bcrypt hash. Each hash calculation has to be done by an actor.
 
-Also called **Event-based pattern**
+The result is available here: https://github.com/maxime-lair/bcrypt_threads
+
+As you can see, having threads can reduce dramatically your execution time if you need to have independent calculations.
+
+A few pointers on how to design them well:
+- Identify truly independent computations
+- Threads should be at the highest level possible (top down approach)
+- Thread-safe data libraries is a must
+- Stress-test your solution on multiple corner cases 
 
 ## Concurrency
 
-IPC / Locking (semaphore) / Mutex / Thread safety
+In order to share data between threads, there is a few ways to communicate in a process, and It is often about picking one that suits your needs. 
+
+It's possible to use IPC (*Interprocess communication*) between threads, but that could be considered overkill. It still remains one of the solution you could use to effectively communicate. A few examples to name them:
+- gRPC
+- Signals
+- Pipes
+- Message queues
+- Semaphore
+- Shared memory
+
+But a few mechanisms available only to threads exist, and It would be a shame to not use them.
+
+### Mutex
+
+The first one is a sort of lock called **mutex**. Whenever the thread is accessing the data or resources that are shared among other threads, It locks a mutex so It can have exclusive access to the shared resources. The mutex usually contains a state (lock or free) and information about the thread locking it. What's in-between the lock and unlock of mutex is called critical section, and that's the place where you will safely access the resources. While It is a nice feature, you need to make sure your locking thread does not keep the mutex unavailable for too long, as It will make others threads unable to access the resource. This critical section needs to be as short as possible, as It is usually from where issues spawn.
+
+The mutex also possess a list of others threads that tried to access it, as It avoids starvation, where one thread is able to continuously access the mutex when another is not able to due to scheduling problems.
+
+This feature is often used in database, as It usually handles lots of concurrent access.
+
+### Atomic variables
+
+A shared mutable state very easily leads to problem when concurrency is involved. While using a lock such as mutex is nice, and allow to run through a critical section without being afraid of concurrency, It usually cause waiting issues on other threads. 
+
+This is why atomic variables were created, in order to create non-blocking algorithms for concurrent environments. They ensure the data integrity by only allowing atomic instructions. These atomic operations focus on completing without any possibility for something to happen in-between, as they are indivisible and there is no way for a thread to slip through another one. There is no risk of data races, and allows better synchronization. They however are usually reserved for simple read or write of simple variables such as an Integer or String. If you need to concurrently access a file, a mutex would be more fit for this type of operation.
+
+### Message passing
+
+Building a concurrent program is difficult, as It needs to take care of liveness (as less locks as possible) and fairness (each thread can process equally).  A third type of communication is possible in Threads that tries to be as close as possible to these concepts is *message passing*. It can be implemented through several ways, but It is usually done in a **synchronized queue**. It re-uses the concept of producer-consumer pattern, but where each thread is able to be one or the other. The goal of the queue is to be as fair as possible, by including different scheduling with FIFO (First in First out) or FILO (First in Last Out). Each thread can implement a queue or they can share it through lock or atomic variables (pop and put).
+
+All these features try to ensure Thread safety and make sure your program runs smoothly.
 
 ## Pitfalls
 
-Deadlocks / Race conditions / Starvation / Livelock
+A few common pitfalls stem from concurrent programming, and they come from the increased complexity of building a distributed architecture.
+
+The first one is usually the **deadlock** where two threads block each other resources:
+- Thread A blocks resource 1
+- Thread B blocks resource 2
+- Thread A needs resource 2 to unlock resource 1
+- Thread B needs resource 1 to unlock resource 2
+
+The only way to avoid this is to reduce the critical section to the least possible amount of resources.
+
+The second one is **race condition** and It occurs when two or more threads can access shared data and they try to change it at the same time. Since you can not expect a specific order of execution due to the thread scheduling algorithm, you can not expect the change in data to be reliable as each thread will be "racing" to modify the data. The main issue is when a thread checks a value then act on it, even though another thread could have changed the value in-between.
+
+Here, you would typically put a lock or use atomic operations to ensure the data integrity.
+
+Third one is **Starvation**, where one thread occupies the majority of the execution scheduling, and It happens when there is no queue in place to ensure a thread does not wait too long, and increase in priority over time.
+
+Last one would be **Livelock**, where two or more threads keep on transferring states between on another instead of waiting infinitely. It usually happens when you try to "replay" messages when a part keep failing, and they stick to repeating the same pattern over and over again.
 
 ## Conclusion
 
+While concurrent programming is difficult to implement, and harder to maintain, It is still interesting to see how It can speed up your process and make use of the multi-core architecture we are now always using.
+
+The GO program was nice to implement, and the result is even nicer, and It really shows how good languages are getting at making parallel operations.
+
+I think I should tried implement more pitfalls to showcase how they can happen, but I don't think they are too hard to understand concept-wise. They usually happen when an application become more and more complicated, and can be devastating in some case.
 
 > Credits
 >
 > https://www.oreilly.com/library/view/the-art-of/9780596802424/ch04.html
 > 
+> https://www.baeldung.com/java-deadlock-livelock
 > 
-> 
-> 
-> 
-> 
-> 
-> 
-> 
-> 
-> 
-> 
-> 
+> https://applied-programming.github.io/Operating-Systems-Notes/3-Threads-and-Concurrency/
 > 
