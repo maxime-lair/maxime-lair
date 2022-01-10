@@ -19,7 +19,7 @@ I will try to focus on the inner architecture and useful commands, without divin
    - [Startup management (Initd)](roadTo/os_concepts/startup_management)
    - [Posix Basics](roadTo/os_concepts/posix_basics)
    - [Virtualization](roadTo/os_concepts/virtualization)
-   - Threads and concurrency
+   - [Threads and concurrency](roadTo/os_concepts/threads_and_concurrency)
    - Sockets
    - Networking concepts
 2. [Terminal fu](roadTo/terminal_fu)
