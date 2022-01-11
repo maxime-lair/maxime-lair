@@ -55,7 +55,7 @@ This model is more popular, as It depicts a single thread (the boss) that acts a
 
 Let's create a simple program, which will receive a list of string, and return each bcrypt hash. Each hash calculation has to be done by an actor.
 
-The result is available here: https://github.com/maxime-lair/bcrypt_threads
+[The result is available here](https://github.com/maxime-lair/bcrypt_threads)
 
 As you can see, having threads can reduce dramatically your execution time if you need to have independent calculations.
 
