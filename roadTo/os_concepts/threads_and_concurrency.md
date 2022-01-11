@@ -69,7 +69,7 @@ A few pointers on how to design them well:
 
 ## Concurrency
 
-In order to share data between threads, there is a few ways to communicate in a process, and It is often about picking one that suits your needs. 
+In order to share data between threads, there is a few ways to communicate in a process, and It is often about picking one that best suits your needs. 
 
 It's possible to use IPC (*Interprocess communication*) between threads, but that could be considered overkill. It still remains one of the solution you could use to effectively communicate. A few examples to name them:
 - gRPC
