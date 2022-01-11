@@ -57,6 +57,8 @@ Let's create a simple program, which will receive a list of string, and return e
 
 [The result is available here](https://github.com/maxime-lair/bcrypt_threads)
 
+In the example, the iterative script takes ~ 50s to through 1000 words while the one with threads take ~ 100ms.
+
 As you can see, having threads can reduce dramatically your execution time if you need to have independent calculations.
 
 A few pointers on how to design them well:
