@@ -93,7 +93,7 @@ This feature is often used in database, as It usually handles lots of concurrent
 
 A shared mutable state very easily leads to problem when concurrency is involved. While using a lock such as mutex is nice, and allow to run through a critical section without being afraid of concurrency, It usually cause waiting issues on other threads. 
 
-This is why atomic variables were created, in order to create non-blocking algorithms for concurrent environments. They ensure the data integrity by only allowing atomic instructions. These atomic operations focus on completing without any possibility for something to happen in-between, as they are indivisible and there is no way for a thread to slip through another one. There is no risk of data races, and allows better synchronization. They however are usually reserved for simple read or write of simple variables such as an Integer or String. If you need to concurrently access a file, a mutex would be more fit for this type of operation.
+This is why atomic variables were created, in order to create non-blocking algorithms for concurrent environments. They ensure the data integrity by only allowing atomic instructions. These atomic operations focus on completing without any possibility for something to happen in-between, as they are indivisible and there is no way for a thread to slip through another one. There is no risk of data races, and allows better synchronization. They however are usually reserved for simple read or write of simple variables such as an Integer or String. If you need to concurrently access a file, a mutex would be fit better for this type of operation.
 
 ### Message passing
 
