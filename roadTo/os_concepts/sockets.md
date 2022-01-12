@@ -52,6 +52,13 @@ Create - Bind -  Connect - Write - Close
 
 ### GRPC
 
+## Interact with socket
+
+### Useful commands
+
+### Monitoring
+
+/proc /sys etc
 
 ## Conclusion
 
