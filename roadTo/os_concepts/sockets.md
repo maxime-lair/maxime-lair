@@ -63,7 +63,7 @@ Here we will check the different type of socket type available to us. There is a
 
 **Connection-oriented sockets**, which use *Transmission Control Protocol* (TCP), *SCTP* or *DCCP*. A stream socket provides a **sequenced and unique flow of error-free data** without record boundaries, with well-defined mechanisms for creating and destroying connections and reporting errors. A stream socket transmits data **reliably**, **in order**, and with **out-of-band** capabilities. On the Internet, stream sockets are typically implemented using TCP so that applications can run across any networks using TCP/IP protocol.
 
-This is the most used type of socket today, as It ensures what the server send will be received in the same sequence on the client. Imagine watching a video, you would not want the image to stutter and miss frames, so you prefer waiting for it to buffer reliably so you can watch it later.
+This is the most used type of socket today, as It ensures what the server send will be received in the same sequence on the client. Imagine watching a movie, you would not want the image to stutter and miss frames every few seconds, so you prefer waiting for it to buffer reliably and watch it later.
 
 They are represented by the family/type: **AF_INET**/**SOCK_STREAM**
 
@@ -73,7 +73,7 @@ They are represented by the family/type: **AF_INET**/**SOCK_STREAM**
 
 **UDP sockets** do not have a established state. A UDP server process handles incoming datagrams from all remote clients sequentially through the same socket. UDP sockets are not identified by the remote address, but only by the local address.
 
-This is a less reliable type of socket, but It focuses on delivery speed. If you already have a protocol on higher OSI layer that implements session and reliability, then **UDP** is better. Whenever there is a high bandwidth requirement, or you need to implement **multicast**, you can consider this socket type. In case of weather data for example, you do not care if you miss out on a few seconds data, but you care to receive it as fast as possible to prepare for a storm or earthquake.
+This is a less reliable type of socket, but It focuses on delivery speed. If you already have a protocol on higher OSI layer that implements session and reliability, then **UDP** could be considered. Whenever there is a high bandwidth requirement, or you need to implement **multicast**, you can consider this socket type. In case of weather data for example, you do not care if you miss out on a few seconds data, but you care to receive it as fast as possible to prepare for a storm or earthquake.
 
 They are represented by the family/type: **AF_INET**/**SOCK_DGRAM**
 
@@ -89,11 +89,13 @@ They are usually available in most family, as one type, and they have no preferr
 
 Also called **Inter-process communication socket** (IPC), they are a data communications endpoint for exchanging data between processes executing on the same host operating system. While they do not implement TCP/UDP/IP as they are not over the network, they still include stream/datagram sockets capabilities. They are a standard component of *POSIX operating systems*.
 
+Available on the **AF_UNIX** family, the *SOCK_STREAM* socket type provides pipe-like facilities, while the *SOCK_DGRAM* and *SOCK_SEQPACKET* socket types usually provide reliable message-style communications.
 
-
-Available on the **AF_UNIX** family, with **SOCK_STREAM**/**SOCK_DGRAM**/**SOCK_RAW**
+https://www.digitalocean.com/community/tutorials/understanding-sockets#what-is-a-unix-domain-socket
 
 ## Socket protocol
+
+https://www.ibm.com/docs/en/zos/2.2.0?topic=concepts-tcpip
 
 ### UDP
 
