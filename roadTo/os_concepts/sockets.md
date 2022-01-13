@@ -91,15 +91,79 @@ Also called **Inter-process communication socket** (IPC), they are a data commun
 
 Available on the **AF_UNIX** family, the *SOCK_STREAM* socket type provides pipe-like facilities, while the *SOCK_DGRAM* and *SOCK_SEQPACKET* socket types usually provide reliable message-style communications.
 
-https://www.digitalocean.com/community/tutorials/understanding-sockets#what-is-a-unix-domain-socket
+As a more pratical example, we can use `nc` command to create them on the fly. As you can see, the address is simply the path on the filesystem.
+
+![image](https://user-images.githubusercontent.com/72258375/149359328-ff07ae16-816e-4b2a-8cd3-bc2e2fd8df82.png)
+
+![image](https://user-images.githubusercontent.com/72258375/149359366-76f1a06d-8bd6-4575-b84b-9b50e325f53a.png)
+
+It allows for a two-way communication (so by default a stream socket), be careful when creating them through this command, as It doesn't destroy the socket file afterwards.
+
+![linux_socket](https://user-images.githubusercontent.com/72258375/149359973-1e0ec348-d9e3-471c-a8ed-e90dd0c97e64.gif)
+
+*Note:* Named pipes are another mean of IPC within a Unix host, but they are only allow uni-directonial communication and can not distinguish clients from each other. UNIX socket are often considered a cleaner way for process to communicate between each other. 
 
 ## Socket protocol
 
-https://www.ibm.com/docs/en/zos/2.2.0?topic=concepts-tcpip
+Now that we have seen the different socket families (Unix, Internet IPv4, IPv6..), and socket types (Stream, datagram, raw, etc.), we can dive in the last part: the socket protocol.
+
+A *protocol* is a standard set of rules for transferring data, such as UDP/IP and TCP/IP. The protocol has to be supported by the socket type (and by the socket family) to be used. While in most cases, the protocol will be automatically decided depending on the socket type (INET/Stream -> TCP ; INET/Datagram -> UDP), It is not always the case. Here is a few major protocols in the suite of Internet Network Protocols:
+- TCP
+- UDP
+- RDS
+- IP
+- ICMP
 
 ### UDP
 
+Without diving too far in the OSI layer, know those protocols stands on the *transport* layer, on top of the *network* that implements IP.
+
+It is connectionless, offers datagram services but less reliable. While It is less popular than TCP, It is gaining traction through big scale stateful UDP services, such as [QUIC](https://blog.cloudflare.com/quic-version-1-is-live-on-cloudflare/).
+
+UDP sockets can be either :
+- *connected* containing
+  - Source IP / Port
+  - Destination IP / Port  
+- *unconnected*
+  - Bind IP / Port
+
+An example with code, to ping Cloudflare DNS server with UDP packet:
+
+![image](https://user-images.githubusercontent.com/72258375/149408742-b3a0540c-9037-4612-9606-fd6dbd0de98d.png)
+
+And It will timeout as the DNS server can not answer the request:
+
+![image](https://user-images.githubusercontent.com/72258375/149408864-07b12a47-e9a5-4a6e-bf44-78025c883b18.png)
+
+As you can see, *connected* is great if you already know where you are going, but *unconnected* would be more fit for a server, as one socket can make multiple outbound queries.
+
+However, UDP requires a bit more tuning when used, as **TCP** can transparently deal with MTU/fragmentation (e.g. with jumbo frames) and ICMP errors, while **UDP** might require extra care on those corner cases.
+
+The UDP packet header:
+
+![udp_header](https://user-images.githubusercontent.com/72258375/149413924-80fb3d86-e356-4a60-8d1a-8620e6806df0.png)
+
 ### TCP
+
+TCP provides reliable stream delivery of data between Internet hosts.
+
+Like **UDP**, **TCP** uses the *Internet protocol (IP)* to transport data, and supports the block transmission of a continuous stream of datagrams between process ports. **TCP** ensures that data:
+- is not damaged (checksum)
+- lost/duplicated (sequencing)
+- delivered out of order (acknowledgement)
+
+The packet header looks like this:
+
+
+https://www.ibm.com/docs/pl/aix/7.1?topic=protocols-transmission-control-protocol
+
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/reference_guide/chap-sockets
+TCP_NODELAY
+TCP_CORK
+
+
+TCP_PACKET
+
 
 ### GRPC
 
@@ -108,6 +172,8 @@ https://www.ibm.com/docs/en/zos/2.2.0?topic=concepts-tcpip
 ### Useful commands
 
 netstat -a -p --unix
+
+ss
 
 ### Monitoring
 
@@ -121,12 +187,10 @@ netstat -a -p --unix
 >
 > https://www.digitalocean.com/community/tutorials/understanding-sockets
 > 
-> https://ops.tips/blog/how-linux-creates-sockets/
-> 
 > https://www.ibm.com/docs/en/zos/2.2.0?topic=concepts-tcpip
-> 
-> https://www.tutorialspoint.com/unix_sockets/what_is_socket.htm
 > 
 > https://www.ibm.com/docs/pl/aix/7.1?topic=concepts-sockets
 > 
 > https://ipfs.io/ipfs/QmfYeDhGH9bZzihBUDEQbCbTc5k5FZKURMUoUvfmc27BwL/socket/services.html
+>
+> https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1/ 
