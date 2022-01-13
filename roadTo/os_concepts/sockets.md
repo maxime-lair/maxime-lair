@@ -37,6 +37,7 @@ The code:
 ![image](https://user-images.githubusercontent.com/72258375/149200915-8df6fd4e-d2fc-4a49-88c7-cc93bf9c4c12.png)
 
 The output:
+
 ![image](https://user-images.githubusercontent.com/72258375/149201355-a6776d9c-f123-4e87-8467-9fc6ef95c149.png)
 
 We will go through each socket type, and implement a simple client/server at the end. Different protocols will be used and shortly explained, as this is the subject of another article (i.e. *networking concepts*).
@@ -154,8 +155,25 @@ Like **UDP**, **TCP** uses the *Internet protocol (IP)* to transport data, and s
 
 The packet header looks like this:
 
+![tcp_header_flag](https://user-images.githubusercontent.com/72258375/149421146-96f96b0d-6ded-49c9-8c0a-2bc63573733f.png)
 
-https://www.ibm.com/docs/pl/aix/7.1?topic=protocols-transmission-control-protocol
+The following are operational characteristics of **TCP**:
+
+| Item | Description |
+| --- | --- |
+| **Basic Data transfer** | TCP can transfer a continuous stream of 8-bit octets in each direction between its users by packaging some number of bytes into *segments* . TCP implementation allows a segment size of *at least 1024 bytes* |
+| **Reliability** | A sequence number is assigned to each octet it transmits and requiring a positive acknowledgment (ACK) from the receiving TCP. If the ACK is not received within the time-out interval, the data is retransmitted. The TCP retransmission time-out value is dynamically determined for each connection, based on round-trip time | 
+| **Flow control** | TCP governs the amount of data sent by returning a window with every ACK to indicate a range of acceptable sequence numbers beyond the last segment successfully received | 
+| **Multiplexing** | TCP allows many processes within a single host to use TCP communications facilities simultaneously. TCP receives a set of addresses of ports within each host | 
+| **Connections** | TCP must initialize and maintain certain status information for each data stream. The combination of this information, including sockets, sequence numbers, and window sizes, is called a connection | 
+| **Precedence and security** | The priority function is provided to allow TCP to mark certain packets as higher priority. Packets with higher priority will get forwarded first. In addition, a provision is made to allow for compression and encryption of the TCP headers. All of these functions are signalled by a set of flags in the TCP header |
+
+As you can see, while the header is larger than in **UDP** case, It adds useful features for your connection. The way It operates is also different, as It is divided into three phases:
+- Connection Establishment (through **three-way handshake**)
+- Data transfer 
+- Connection termination (through **four-way handshake**)
+
+Now that we understand how It operates, and what It can offer, let's talk about its features and options in more details
 
 https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/reference_guide/chap-sockets
 TCP_NODELAY
