@@ -169,23 +169,60 @@ The following are operational characteristics of **TCP**:
 | **Precedence and security** | The priority function is provided to allow TCP to mark certain packets as higher priority. Packets with higher priority will get forwarded first. In addition, a provision is made to allow for compression and encryption of the TCP headers. All of these functions are signalled by a set of flags in the TCP header |
 
 As you can see, while the header is larger than in **UDP** case, It adds useful features for your connection. The way It operates is also different, as It is divided into three phases:
-- Connection Establishment (through **three-way handshake**)
+- Connection Establishment (through **three-way handshake** --> SYN + SYN/ACK + ACK)
 - Data transfer 
-- Connection termination (through **four-way handshake**)
+- Connection termination (through **four-way handshake** --> FIN + ACK - FIN + ACK)
 
-Now that we understand how It operates, and what It can offer, let's talk about its features and options in more details
+Now that we understand how It operates, and what It can offer, let's talk about a few features and options in more details
 
-https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/reference_guide/chap-sockets
-TCP_NODELAY
-TCP_CORK
+#### Flow control
 
+Besides what checksum and sequence can achieve, *TCP* includes a flow and congestion control to avoid flooding one node. Having a mechanism for flow control is essential in an environment where machines of diverse network speeds communicate. *TCP* uses a sliding window flow control protocol, where each segment specifies the number of data It is willing to buffer for the connection. The sending host can send only up to that amount of data before It must wait for an acknowledgement and window update from the receiving host.
 
-TCP_PACKET
+#### Congestion control
 
+*MSS* is the largest amount of data, specified in bytes, that TCP is willing to receive in a single segment. For best performance, It should be set small enough to avoid *IP fragmentation* so It can pass through a link MTU. This parameter is typically announced on the connection establishment and derived from the MTU size of the data link layer of the networks.
+
+The next aspect is *congestion control*, where *TCP* uses mechanisms to achieve high performance and avoid congestion collapse (when incoming traffic > outgoing bandwidth). It keeps the data flow below a rate that would trigger collapse through four intertwined algorithms: *slow-start, congestion avoidance, fast retransmit and fast recovery*. Without diving into the specifics, these algorithms set a small multiple of the *MSS* allowed on that connection depending on the round-trip time (RTT).
+
+There is a lot more to cover on this part, as there is new algorithms coming in and out every year, and It can also depends on the network visibility (black-box or white-box).
+
+#### Selective acknowledgments
+
+Also called **SACK**, It allows the receiver to acknowledge discontinuous blocks of packets which were received correctly, in addition to the sequence number immediately following the last sequence number received. This option is not mandatory, but has become widespread due to the quality of life improvement on long fat networks.
+
+*TCP* may experience poor performance when multiple packets are lost from one window of data. This forces the sender to either wait a roundtrip time to find out about each lost packet, or to retransmit segments which have been correctly received. With *SACK*, the data receiver can inform the sender about all segments that have arrived successfully, so the sender need to only retransmit the segments that have actually been lost.
+
+#### TCP no delay
+
+Now we will check out a few options that are relevant for Real Time applications, the first one being `TCP_NODELAY`.
+
+*TCP* has had to introduce new heuristics to handle the changes effectively. These heuristics can result in a program becoming unstable. One example of heuristic behavior in TCP is that small buffers are delayed. This allows them to be sent as one network packet. This generally works well, but it can also create latencies.
+
+*TCP_NODELAY* is an option that can be used to turn this behavior off. For it to be used effectively, the application must avoid doing small buffer writes, as TCP will send these buffers as individual packets.
+
+#### TCP cork
+
+Another TCP socket option that works in a similar way is `TCP_CORK`. When enabled, TCP will delay all packets until the application removes the cork, and allows the stored packets to be sent. This allows applications to build a packet in kernel space, which is useful when different libraries are being used to provide layer abstractions. 
 
 ### GRPC
 
+Now that we have seen the main protocols (TCP/UDP), we can check out a different type called `gRPC`. It is an open source remote procedure call (RPC) system initially developed at Google in 2015. It uses *HTTP/2* for transport, with protocol buffers, bidirectional streaming and flow control. Most common usage scenarios include connecting services in a microservices style architecture. 
+
+It stands on the session layer, and could be considered a completly different kind from the previous sockets we saw, but  they still create communication channels that enable unrelated processes to exchange data, and It is a very new way for process to communicate, so let's try it !
+
+We will implement a simple client in Go with *BubbleTea TUI*, that will interact with a python server. It will simply provide a list of possible sockets family, then types, then protocols (so we can re-use our previous script). **Why ?** Because I saw those technologies and I thought It would be cool to use them.
+
+The code is available here:
+
+
+
+The output:
+
+
 ## Interact with socket
+
+Now that we know how to create and implement sockets, let's check out how we can show and analyze them on Linux.
 
 ### Useful commands
 
@@ -212,3 +249,5 @@ ss
 > https://ipfs.io/ipfs/QmfYeDhGH9bZzihBUDEQbCbTc5k5FZKURMUoUvfmc27BwL/socket/services.html
 >
 > https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1/ 
+>
+> https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/reference_guide/chap-sockets
