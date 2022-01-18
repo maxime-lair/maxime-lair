@@ -33,6 +33,7 @@ You can explore _/etc/systemd/_ instead, It gives an idea of the inner architect
 You can analyze each file full configuration with `systemd-analyze cat-config [PATH_TO_FILE]`
 
 At its core, *systemd* manages units, and there is 11 available, highlighted in bold are the most important:
+
 | Units | Description |
 | --- | --- |
 | Service | **Start and control daemons and processes they consist of, most used type** |
