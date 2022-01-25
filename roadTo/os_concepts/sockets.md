@@ -30,7 +30,7 @@ Sockets are classified according to communication properties. Each socket has an
 
 Then, the socket has to support a protocol to allow data exchange through a standard set of rules such as UDP or TCP over IP.
 
-I wrote a simple script in Python3 to showcase the different family/type/proto used by each socket. The choice of Python3 is arbitrary, I could have used any languages with a `socket` library (almost all). My point here will be to use this to create a client in **Python**, and a server in **Go**, to showcase that It is language-agnostic.
+I wrote a simple script in Python3 to showcase the different family/type/proto used by each socket. The choice of Python3 is arbitrary, I could have used any languages with a `socket` library (almost all). My point here will be to use this to create a client in **Go**, and a server in **Python**, to showcase that It is language-agnostic.
 
 The code:
 
