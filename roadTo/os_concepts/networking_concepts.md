@@ -24,6 +24,8 @@ The main protocols are:
 
 ### Ethernet 802.xx
 
+**TODO**
+
 ### LLC/MAC
 
 The data link layer is often divided into two sublayers:
@@ -57,6 +59,31 @@ This is why, on Ethernet, the 8 octets (3 from *LLC*, 5 from *SNAP*) reduce the 
 For example, IP datagrams and ARP datagrams are transmitted over IEEE 802 networks using LLC and SNAP headers.
 
 ### MAC layer
+
+Also called the medium access control sublayer, It controls the hardware responsible for interaction with the transmission medium (wired, optical or wireless). While the LLC provides flow control and multiplexing for the logical link (EtherType, etc.), the MAC provides flow control and multiplexing for the transmission medium.
+
+It includes a local network address called MAC address, intended to be a unique serial number assigned by the network interface hardware (NIC) at the time of manufacture. It is 48 bits long, separated by colons every two digits
+
+An example, this one belongs to *Samsung Electronics*:
+
+![MAC_48(3)](https://user-images.githubusercontent.com/72258375/151060330-1d0d3833-c5c9-450d-882c-3c7f4aa9394d.png)
+
+a MAC address can be defined universally by the manufacturer or locally by a system administrator. MAC address are by definition finite and we will end up running out of possible addresses, so an alternative called **EUI** was created. It simply adds 2 octets to the *UAA*, all *MAC-48* are *EUI* by padding `FF:FF` between your OUI and UAA.
+
+![EUI_64](https://user-images.githubusercontent.com/72258375/151061413-784317f2-a632-4169-9881-88ab246ef8f7.png)
+
+Ethernet frames with a value of 1 in the least-significant bit of the first octet of the destination MAC address are treated as multicast frames and are flooded to all points on the network. 
+
+Some blocks are reserved to specific usage, such as PTP (Time precision protocol) or STP (Spanning tree protocol), you can check them [here](https://en.wikipedia.org/wiki/Multicast_address). These blocks are either only on Local LAN link or either be forwarded through bridges.
+
+Easier to understand with an example:
+
+![MAC_48_multicast](https://user-images.githubusercontent.com/72258375/151064299-bdeaeebd-e5b0-4965-be16-90067188e9d8.png)
+
+The MAC protocol is used to provide the data link layer of the communication protocol (e.g. Ethernet), and its header include 16 bytes with a CRC at the end:
+
+![MAC_header](https://user-images.githubusercontent.com/72258375/151067888-427a5afe-daac-4e1b-bd4e-2210a75ab487.png)
+
 
 ### Switch/Bridge/WAP
 
