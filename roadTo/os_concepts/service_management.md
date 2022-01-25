@@ -90,6 +90,7 @@ If you are interested in *systemd* service architecture, try out `systemctl list
 ![image](https://user-images.githubusercontent.com/72258375/147775707-5ede546d-296a-4fe0-b81a-42b9a6c93d92.png)
 
 Among all the running units (and not only services), there is a few interesting ones that you might already know:
+
 | Unit | Type | Used for |
 | --- | --- | --- |
 | proc-sys-fs-binfmt_misc | automount | all block/character devices |
