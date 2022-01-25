@@ -26,6 +26,14 @@ The main protocols are:
 
 **TODO**
 
+### Alternatives
+
+#### Point-to-point
+
+#### HDLC
+
+#### ADCCP
+
 ### LLC/MAC
 
 The data link layer is often divided into two sublayers:
