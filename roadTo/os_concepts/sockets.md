@@ -132,7 +132,7 @@ An example with code, to ping Cloudflare DNS server with UDP packet:
 
 ![image](https://user-images.githubusercontent.com/72258375/149408742-b3a0540c-9037-4612-9606-fd6dbd0de98d.png)
 
-And It will timeout as the DNS server can not answer the request:
+And It will timeout as the DNS server can not answer the request: 
 
 ![image](https://user-images.githubusercontent.com/72258375/149408864-07b12a47-e9a5-4a6e-bf44-78025c883b18.png)
 
@@ -225,15 +225,110 @@ Now that we know how to create and implement sockets, let's check out how we can
 
 ### Useful commands
 
-netstat -a -p --unix
+Linux includes a nice array of tools to display network activity. One of the most used one is `netstat` but It is on its way to become obsolete, and leave his seat for the `ss` utility. It is supposed to be faster and more human-readable.
 
-ss
+#### Netstat
+
+The main example of `netstat` usage would be to display sockets on *LISTEN* state
+
+![image](https://user-images.githubusercontent.com/72258375/151001825-77589782-dc9a-4232-ba90-4868cd91f6df.png)
+
+The command:
+
+![image](https://user-images.githubusercontent.com/72258375/151003431-bc90775a-f529-40d3-8601-6eec1b4411bd.png)
+
+You can notice some well known ports, such as *SSH* (22), *Performance monitor daemon* (44321) but also more obscure one such as *4330*, no idea of its use, and *50051* which was our previous GRPC project server.
+
+There is many more arguments available, but you usually only care for TCP listen connections when handling server. 
+
+For example, to only show *dbus* unix sockets:
+
+![image](https://user-images.githubusercontent.com/72258375/151004063-99a4cb80-667b-4270-a1a4-4345596db84c.png)
+
+#### ss utility
+
+The basic ss command without any options simply lists all the connections regardless of the state they are in. Luckily, It is easy to transition into `ss` from `netstat` as most options operate in much the same fashion.
+
+To check out the *TCP* sockets with their associated *cgroups*
+
+![image](https://user-images.githubusercontent.com/72258375/151011754-3ac45d47-6f9c-4d8d-b8dd-dae8a60c3f39.png)
+
+Or *Unix stream* sockets:
+
+![image](https://user-images.githubusercontent.com/72258375/151012617-1cb9404e-102d-4dde-8261-f10a933cf975.png)
+
+One nice command to check non-localhost sockets:
+
+![image](https://user-images.githubusercontent.com/72258375/151010875-6eee731e-ff57-4f97-867e-8ddc4271822b.png)
+
+
+#### Others utilities
+
+Since everything is a file in Linux, you can also use `lsof` to check which sockets are in use
+
+For Unix sockets:
+
+![image](https://user-images.githubusercontent.com/72258375/151005799-12d0c7c0-7ecd-448c-998b-5b117bf47bc4.png)
+
+To show the peer :
+
+![image](https://user-images.githubusercontent.com/72258375/151006408-ff50712e-6921-466d-a6ac-58b392ae26a8.png)
+
+You can also use `nc` to start a quick listening socket on any ports, for testing purpose, such as :
+
+![test_nc](https://user-images.githubusercontent.com/72258375/151018397-bb115c29-bfa0-4b8d-8741-bf60ea4fcc29.gif)
 
 ### Monitoring
 
-/proc /sys etc
+In order to properly monitor our sockets activity, we need to define our search perimeter. 
+
+Sockets are dependent on your network configuration (devices, routing, etc.) and your program ability to process them. It is necessary to have metrics from your hardware, network and process to fully analyze an issue. For example, you could think changing from TCP to UDP could increase your latency, but If you had routing in place depending on TCP or UDP packets in your network, this could skew the results.
+
+This is why we want to focus on what metrics we can retrieve from our sockets. `ss -s` command already gave us a nice idea of the type of information we could be looking for, but where does It take this information from ?
+
+#### /proc
+
+One of the first place we can look into is `/proc`, where we can find networking parameters and statistics.
+
+We can find some nice statistics in `/proc/net`, i.e. *protocols* :
+
+![image](https://user-images.githubusercontent.com/72258375/151013720-b84c1ab4-752e-4149-b349-bec7caaacb6e.png)
+
+Or *sockstat* / *tcp*:
+
+![image](https://user-images.githubusercontent.com/72258375/151014000-1e2bf149-c6ab-4c73-bd19-45ef47bd29c7.png)
+
+Thinking of metrics, we could first start from a top-down perspective, count the number of sockets, by family, type and protocols, then get more specific statistics with popular ones (such as TCP).
+
+For example, taking TCP as a basis, we can check all stats available for TCP:
+
+![image](https://user-images.githubusercontent.com/72258375/151015490-855c961d-4720-485e-81c1-f644552ab958.png)
+
+We can see there is 102 possibles stats for a TCP connection, It could be interesting to check out each of them, as they could be useless or useful depending on your usecase. If you do not have *SACK* activated, you probably won't need it.
+
+![image](https://user-images.githubusercontent.com/72258375/151016141-fd9e8cd4-55f0-4b24-8f54-04a31b064c1f.png)
+
+You can also check out the kernel networking parts in `/proc/sys/net`, where you can see your system networking parameters:
+
+![image](https://user-images.githubusercontent.com/72258375/151016657-fedbe314-3692-40d5-b9a5-687bb717b02c.png)
+
+More information on each directory is available [here](https://www.kernel.org/doc/html/latest/admin-guide/sysctl/net.html?highlight=sockets)
+
+#### /sys
+
+You can also find information in the `/sys` directory
+
+![image](https://user-images.githubusercontent.com/72258375/151020030-869f9b5f-f712-4cf7-b789-658fdf0ec6d7.png)
+
+But most of these informations will depend on your devices, and be most hardware oriented.
+
+![image](https://user-images.githubusercontent.com/72258375/151020410-1a29b9ee-0ccb-4240-aca6-40c8143a7219.png)
 
 ## Conclusion
+
+We were able to check out the difference in multiple socket families, types and protocols, with the most popular being TCP/IP, UDP/IP, Unix/DGRAM, Unix/STREAM. We tried to dive into the specifics of TCP and UDP protocols to learn how and why they are different. We created a small project to explore new technologies such as GRPC through a nice golang client and python server, while having a BubbleTea TUI was not important, It was still nice to implement and try it out. We ended up with some commands and metrics we can use to view our system sockets.
+
+Check out some of these credits below and the GRPC repository I linked, as I think I over-complicated some parts and not explained some others, this is one of the longest article I did, mainly due to the client/server side-project.
 
 > Credits
 >
@@ -250,3 +345,5 @@ ss
 > https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1/ 
 >
 > https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux_for_real_time/7/html/reference_guide/chap-sockets
+>
+> https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/deployment_guide/s2-proc-dir-net
