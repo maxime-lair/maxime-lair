@@ -6,6 +6,8 @@ We will try to understand IP v4/v6 works without diving too much into details, a
 
 We could also call it understanding the network layer, as we will cover *ARP/ICMP/MAC/LLC*
 
+We will however not dive into TCP/UDP specifics, as It would make the article too clustered with informations, and It was already partly covered in the [Sockets](sockets) article
+
 ## Datalink layer
 
 Organize bits into frames and provides hop-to-hop delivery
