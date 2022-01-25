@@ -1,6 +1,6 @@
 # Sockets
 
-Here we will study the different sockets available and how they function. We will try to implement some, and check the latency between local socket and multi-host ones.
+Here we will study the different sockets available and how they function. We will try to implement some, and check out how to monitor them.
 
 ## Definition
 
