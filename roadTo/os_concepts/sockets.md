@@ -213,7 +213,7 @@ It stands on the session layer, and could be considered a completly different ki
 
 We will implement a simple client in Go with *BubbleTea TUI*, that will interact with a python server. It will simply provide a list of possible sockets family, then types, then protocols (so we can re-use our previous script). **Why ?** Because I saw those technologies and I thought It would be cool to use them.
 
-The code is available here: https://github.com/maxime-lair/grpc-goclient-pythonserver
+The code is available here: [grpc-goclient-pythonserver](https://github.com/maxime-lair/grpc-goclient-pythonserver)
 
 The output:
 
