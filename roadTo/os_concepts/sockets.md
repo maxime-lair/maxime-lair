@@ -40,7 +40,7 @@ The output:
 
 ![image](https://user-images.githubusercontent.com/72258375/149201355-a6776d9c-f123-4e87-8467-9fc6ef95c149.png)
 
-We will go through each socket type, and implement a simple client/server at the end. Different protocols will be used and shortly explained, as this is the subject of another article (i.e. *networking concepts*).
+We will go through each socket type, and implement a simple client/server at the end. Different transport layer protocols will be used and explained, for lower levels protocols, check out this [article](networking_concepts).
 
 ## Socket creation
 
