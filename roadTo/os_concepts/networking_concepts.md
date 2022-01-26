@@ -206,18 +206,49 @@ The main protocol of this layer is **Internet Protocol** or IP. It has the task 
 
 ### IPv4
 
+**TODO** IP packet header
+
+https://en.wikipedia.org/wiki/File:IPv4_Packet-en.svg
 
 
 #### IPv4 address
 
+The IP address space is 32-bit, allowing for 4 billions unique addresses, It is managed by the IANA and the regional Internet Registries (RIP NCC for Europe, ARIN for America). Each RIR maintains a publicly searchable `whois` database that provides information about IP address assignments.
 
+For example, on a random European IP address:
+
+![image](https://user-images.githubusercontent.com/72258375/151251803-5708c6de-d8d8-45e6-a244-486c51c81842.png)
+
+You can notice the IP is part of an address range, as those registries do not allocate IP one by one but block by block. Each block can be defined with a **CIDR notation**, which combines the address of its routing prefix in a compact format, in which the address is followed by a slash character (/) and the subnet mask.
+
+Let's say you wish to use 16 IP addresses in your network, you need to know two parts : your network identifier and the host identifier. This is done through a mask.
+
+![mask](https://user-images.githubusercontent.com/72258375/151257012-f34fd8d8-8a11-42a0-a3c0-a77fedb32a71.png)
+
+Here, the network identifier would be 192.168.31.128 (chosen randomly), and the IP block 192.168.31.128 - 192.168.31.143 ; notice how there is only 14 available address in the range, as the first one is network address, and the last one is the broadcast address. In CIDR notation, the mask would be */28* as there are 28 binary values that identify the network identifier. In reality, there would only be 13 available addresses, as you would need to count the gateway to route outside your network.
+
+A few address block are reserved for special use, notably *127.0.0.0/8* for loopback addresses, *10.0.0.0/8* for local communication in VPNs or *224.0.0.0/4* for IP multicast. There is also **three private networks block** available, packets addresses in these ranges are not routable in the public Internet. These private hosts are notably used for desktop systems :
+
+| CIDR block | Address range | Number of addresses |
+| --- | --- | --- |
+| 10.0.0.0/8 | 10.0.0.0 - 10.255.255.255 | 16 777 216 |
+| 172.16.0.0/12 | 172.16.0.0 - 172.31.255.255 | 1 048 576 |
+| 192.168.0.0/16 | 192.168.0.0 - 192.168.255.255 | 65 536 |
+
+Fragmentation + reassembly
+
+https://en.wikipedia.org/wiki/IPv4
 
 #### ARP
 
+https://en.wikipedia.org/wiki/Address_Resolution_Protocol
 
 ### IPv6
 
+https://en.wikipedia.org/wiki/IPv6
+
 #### IPv6 address
+
 
 
 #### NDP
@@ -226,12 +257,14 @@ The main protocol of this layer is **Internet Protocol** or IP. It has the task 
 
 ### ICMP
 
+https://en.wikipedia.org/wiki/IPv6
 
 ### Nat / Masquerade
 
 
 ### OSPF
 
+https://en.wikipedia.org/wiki/Open_Shortest_Path_First
 
 ## Useful commands and utilities
 
