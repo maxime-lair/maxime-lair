@@ -139,6 +139,8 @@ The MAC protocol is used to provide the data link layer of the communication pro
 
 https://en.wikipedia.org/wiki/Quality_of_service
 
+
+
 #### VLANs
 
 
