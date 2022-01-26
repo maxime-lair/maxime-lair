@@ -144,8 +144,6 @@ https://en.wikipedia.org/wiki/Quality_of_service
 #### VLANs
 
 
-
-
 ### Switch/Bridge/WAP
 
 Ethernet switch -> ARP spoofing / MAC flooding -> load-balancing (SPB) / redundancy (STP)
