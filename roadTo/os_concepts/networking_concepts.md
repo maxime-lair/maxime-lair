@@ -107,7 +107,7 @@ Ethernet II framing vs Ethernet 802.3 framing:
 
 ![ethernet_II_frame(1)](https://user-images.githubusercontent.com/72258375/151205372-e738a943-2a05-4f3d-b302-f3766f5c1412.png)
 
-You can see how using Ethernet 802.3 frames reduce the payload size by the LLC+SNAP header, and overcomplicate things. This is why Ethernet II is here to stay, as It is less complicated and allow for a bigger payload. This also explains why **Etherfield** values are always over 1500 bytes in value. That value was chosen because the maximum length of the payload field of an Ethernet 802.3 frame is 1500 octets (0x05DC). Thus if the field's value is greater than or equal to 1536, the frame must be an Ethernet II frame, with that field being a type field. If it's less than or equal to 1500, it must be an IEEE 802.3 frame, with that field being a length field. Values between 1500 and 1536, exclusive, are undefined. This convention allows software to determine whether a frame is an Ethernet II frame or an IEEE 802.3 frame, allowing the coexistence of both standards on the same physical medium. 
+You can see how using Ethernet 802.3 frames reduce the payload size by the LLC+SNAP header, and overcomplicate things. This is why Ethernet II is here to stay, as It is less complicated and allow for a bigger payload. This also explains why **Etherfield** values are always over 1500 bytes in value. That value was chosen because the maximum length of the payload field of an Ethernet 802.3 frame is 1500 octets (0x05DC). Thus if the field's value is greater than or equal to 1536, the frame must be an Ethernet II frame, with that field being a type field. If it's less than or equal to 1500, it must be an IEEE 802.3 frame, with that field being a length field. Values between 1500 and 1536, exclusive, are undefined. This convention allows the coexistence of both standards on the same physical medium. 
 
 ### MAC layer
 
@@ -145,32 +145,93 @@ The MAC protocol is used to provide the data link layer of the communication pro
 
 #### Quality of service control
 
-https://en.wikipedia.org/wiki/Quality_of_service
-
-
+Also called *Audio Video Bridging (AVB)*, It provides a set of technical standard to improve synchronization, low-latency and reliability for switched Ethernet networks. It is particulary useful in QoS applications requiring low [jitter](https://en.wikipedia.org/wiki/Jitter) such as voIP and IPTV. This QoS is often implemented on the network/transport layer, but there is a few enhancements available on the datalink layer to implement it. These enhancements make use of the optional VLAN tag to implement priority values on data frames.
 
 #### VLANs
 
+A virtual LAN is any broadcast domain that is partitioned and isolated in a network at the data link layer. It works by applying tags to network frames to create the appearance and functionality of network traffic that is physically on a single network but acts as If It is split between separate networks. VLANs allow admins to group hosts together even if the hosts are not directly connected to the same network switch, greatly simplifying network design and deployment (less cables/devices).
+
+An ethernet frame with a VLAN value is usually defined as **tagged**, and without the optional VLAN header, It is **untagged**. An Ethernet switch can decide to drop or forward tagged frames depending on its configuration (access or trunk mode, VLANs allowed, etc.).
+
+This feature is one of the most used in modern networks, as you can scale multiple virtual switches inside one physical switch. Admins will use it to separate and isolate services, making the subnet size smaller (less broadcast noises) and more secure (easier to apply IPS/IDS/ACLs). Cloud providers are particulary fond of VLAN, as you can more easily scale your growing infrastructure.
 
 ### Switch/Bridge/WAP
 
-Ethernet switch -> ARP spoofing / MAC flooding -> load-balancing (SPB) / redundancy (STP)
+Speaking of VLANs direct us to the subject of Ethernet switch and bridges, and how they operate on the datalink layer.
+
+Let's start off with a *hub*, which is a network device without any logic implemented, It simply waits to receive incoming packets to blast it out on all other ports. It will cause network congestion due to the increased overhead and lots of Ethernet collisions (e.g. 6 hosts sending one packet each to a hub would result in creating 30 packets total on the network). This helps to understand why network devices need to implement some kind of logic to route packets efficiently.
+
+The first network device to implement this logic on the datalink layer is the **Ethernet switch**. It uses the *MAC* destination address to forward a frame to the port associated with that address. Addresses are automatically learned by looking at the MAC source address on received frames. If a MAC address is unknown, It will simply flood the frame out to all its port but the ingress port, which will simply refresh its MAC address table.
+
+A switch is stateless, so It has no memory on who requested which data, It does not operate on any upper layer protocols (IP, TCP, HTTP, etc.), It simply learn source addresses and forward by destination address. If you need to capture frames going from one port to another on a switch, you would use SPAN (i.e. port mirroring). However, this setup is limited and impacts your switch CPU. In reality people would prefer adding a network TAP (Terminal Access Point), which is a hardware device similar to a hub, but with 2 ports (port A and B) and a monitor port. They are non-obtrusive (they do not impact your ethernet switch), not detectable on the network, but usually come at a cost.
+
+Now, if you understood what an ethernet switch is, you already know what an ethernet bridge is. The difference is simple, an ethernet switch is a **multiport** ethernet bridge. It simply relays Ethernet frames between devices connected to different ports, in bridge case, It would only be between two devices. Today, the term bridge and switch pretty much mean the same thing.
+
+Historically, *switches* were a term used for devices working on the datalink layer, but It merged overtime with the term *router*, usually used for the network layer. *Router* includes the logic of the *Internet Protocol* which will be explained later, but this made switches capable of performing *ARP* requests to update its MAC address table. While switches were already sensitive to **MAC flooding** attacks, this also made them vulnerable to **ARP spoofing**.
+
+As your network size grows, the number of switches (physical or virtual) goes up, up to thousands of bridges in some case. In order to provide the best route between two nodes, two features to be added onto an Ethernet switch:
+- Redundancy (through STP)
+- Load-balancing (through SPB)
+
+LANs have traditionally relied on Spanning Tree Protocol (*STP*) and its variants (RSTP/MSTP) to prevent loop on the L2 layer. This topology is achieved by electring a *root bridge* and building a least-cost tree linking the root bridge with other non-root nodes. This least-cost tree is created by disabling all links which are not in the least-cost path towards the root. By being able to create a tree-like topology, we can also add more switches for redundancy without being threatened by a layer-2 loop.
+
+While It prevents loop by forcing the path through the root bridge, It makes many links to remain unused, forcing sub-optimal paths. It showcases the limits of Ethernet networks, where all nodes in the LAN have to learn all end-device MAC addresses by flooding until the destination address is learned.
+
+For example, imagine this topology:
+
+![STP_path_first](https://user-images.githubusercontent.com/72258375/151243176-dea12bef-0228-4c1b-ac11-b3875452750c.png)
+
+The forced path would be the least-cost ones going through the root bridge:
+
+![STP_path(1)](https://user-images.githubusercontent.com/72258375/151243251-4fbd2287-0a9a-43c7-8344-ecdd00d950c5.png)
+
+But It is not using all possibles paths, specially a potentially more efficient one:
+
+![STP_path_best](https://user-images.githubusercontent.com/72258375/151243293-658cdb61-a95e-4cae-8c8e-063567ca7a7b.png)
 
 
+*SPB* stands for Shortest Path Bridging, replacing older spanning tree protocols that blocked any redundant paths that could result in a broadcast storm. *SPB* allows all paths to be active with multiple equal cost paths, providing much larger layer 2 topologies, improving the efficiency by allowing traffic to load share across all paths of a mesh network. It is designed to virtually eliminate human error during configuration ([which still happens today](https://www.reddit.com/r/networking/comments/qmbyql/hpe_layer_2_multicast_nightmare/)) and preserves the plug-and-play nature that established Ethernet as the de facto protocol at layer 2. It started being used since ~ 2014 (e.g. at the Winter Olympics).
+
+A nice gif from wikipedia showcasing the algorithm:
+
+![650px-802d1aqECMP16_(cropped)](https://user-images.githubusercontent.com/72258375/151229356-a1b45460-393f-4cdb-8d31-51c5ab85451f.gif)
 
 ## Network layer
 
-Organize frames into packets (fragmentation + reassembly), and decide on path from source to destination
+Now that we have understood how the data link layer is applied, we can move on onto the network layer. It is responsible for packet forwarding including routing through intermediate routers.
+
+It is connectionless, a data packet can travel from a sender to a recipient without the need for an acknowledgement. Also, every host on the network must have a unique address that determines where it is. Networks also need to be able to forward message to other networks for wide-area communication, with the help of gateways or routers.
+
+The main protocol of this layer is **Internet Protocol** or IP. It has the task of delivering packets from the source host to the destination host solely on the IP addresses in the packet headers. It is by definition an unreliable protocol, as It only ensures delivery on a best-effort basis, It does not guarantee that data will be delivered.
 
 ### IPv4
 
+
+
+#### IPv4 address
+
+
+
+#### ARP
+
+
 ### IPv6
 
-### ARP
+#### IPv6 address
+
+
+#### NDP
+
+
 
 ### ICMP
 
+
 ### Nat / Masquerade
+
+
+### OSPF
+
 
 ## Useful commands and utilities
 
@@ -187,9 +248,9 @@ Organize frames into packets (fragmentation + reassembly), and decide on path fr
 >
 > https://en.wikipedia.org/wiki/Subnetwork_Access_Protocol
 >
+> https://networkengineering.stackexchange.com/questions/732/introductory-level-explanation-of-vlans
 >
->
->
+> https://www.al-enterprise.com/-/media/assets/internet/documents/spb-architecture-tech-brief-en.pdf
 >
 >
 >
