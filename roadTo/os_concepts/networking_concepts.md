@@ -55,6 +55,8 @@ One notable frame structure of Ethernet frame is having no *time-to-live field*,
 
 While Ethernet frames are usually 1518 bytes long, they can potentially appear smaller or bigger depending on the system settings. A larger ethernet frame is called **Jumbo frames** and can go up to 9000 bytes long  (or you can go further and beyond with **Super jumbo frames** going up to 64000 bytes). If this size is non-uniform to a network node, It will be detected as **Jabber** and subsequently dropped. On the opposite, an Ethernet frame has a minimum size of 64 bytes (18 bytes header and 46 bytes payload), anything smaller is considered **Runt frames** and is subsequently dropped.
 
+You can probably notice there is multiple types of Ethernet frames, namely the one respecting IEEE 802.3 and Ethernet II. The main difference is IEEE 802.3 uses a LLC header that will be described later. Ethernet II type is largely more used in comparaison.
+
 ### Alternatives
 
 In the data-link layer, while the IEEE 802 is often used, a few alternatives exist to perform the same function. It often depends on the network hardware used to transmit data on the physical layer.
@@ -81,7 +83,7 @@ The data link layer is often divided into two sublayers:
 
 The uppermost sublayer multiplexes protocols running at the top of the data link layer, It makes it possible for several network protocols to coexist within a multipoint network and to be transported over the same network medium. It also provides addressing and control of the data link. It can be considered as the interface between the network layer and the MAC. In short, the LLC provides a way for the upper layers to deal with any type of *MAC* layer.
 
-It can also optionally provide flow control and error management capabilities, but It depends on the protocol stack, as It can be taken care of by a transport layer such as TCP.
+It can also optionally provide flow control and error management capabilities, but It depends on the protocol stack, as It is usually taken care of by a transport layer such as TCP.
 
 ![LLC_PDU](https://user-images.githubusercontent.com/72258375/151045484-ec903706-6599-4495-8cb6-1a8b43ea7bfb.png)
 
@@ -89,7 +91,7 @@ Note the control part can be either 8 or 16 bits long depending on the format (m
 
 This unit is then followed by a multiple of 8 bits, containing the **information** of the upper layer data.
 
-But this model is rarely used in reality, and TCP/ARP frames will not use the SAP value for *TCP/ARP*, but will use *SNAP* instead. SNAP is an extension of the LLC, by adding 40 bits after the LLC header. SNAP supports identifying protocols by Ethernet type field values (**Ethertypes**); it also supports vendor-private protocol identifier spaces instead of being limited to the 7-bit identifying code.
+But this model is rarely used in reality, and TCP/ARP frames will not use the SAP value for *TCP/ARP*, but will use **SNAP** instead. SNAP is an extension of the LLC, by adding 40 bits after the LLC header. SNAP supports identifying protocols by Ethernet type field values (**Ethertypes**); it also supports vendor-private protocol identifier spaces instead of being limited to the 7-bit identifying code.
 
 ![LLC_PDU_SNAP(1)](https://user-images.githubusercontent.com/72258375/151050049-090f681a-2668-4304-b7fe-a0aad2299ea6.png)
 
@@ -97,9 +99,15 @@ If the OUI value is *zero*, the protocol ID is the registered [*EtherType*](http
 
 An EtherType field in each frame is used by the operating system on the receiving station to select the appropriate protocol module (e.g., an Internet Protocol version such as IPv4). Ethernet frames are said to be self-identifying, because of the EtherType field. Self-identifying frames make it possible to intermix multiple protocols on the same physical network and allow a single computer to use multiple protocols together.
 
-This is why, on Ethernet, the 8 octets (3 from *LLC*, 5 from *SNAP*) reduce the size of the available payload such as IP to 1492 bytes (from the default MTU 1500). Therefore, with protocols that have EtherType values, packets are usually transmitted with Ethernet II headers rather than with LLC and SNAP headers, but on other network types, the LLC and SNAP headers are required in order to multiplex different protocols on the link layer, as the MAC layer doesn't possess an EtherType field, so there's no alternative framing that would have a larger available payload.
+This is why, on Ethernet 802.3, the 8 octets (3 from *LLC*, 5 from *SNAP*) reduce the size of the available payload such as IP to 1492 bytes (from the default MTU 1500). Therefore, with protocols that have EtherType values, packets are usually transmitted with Ethernet II headers rather than with LLC and SNAP headers, but on other network types, the LLC and SNAP headers are required in order to multiplex different protocols on the link layer, as the MAC layer doesn't possess an EtherType field, so there's no alternative framing that would have a larger available payload.
 
-For example, IP datagrams and ARP datagrams are transmitted over IEEE 802 networks using LLC and SNAP headers.
+For example, IP datagrams and ARP datagrams are transmitted over IEEE 802 networks using LLC and SNAP headers. But in reality, this specification is rarely followed, and most Ethernet frame will use **Ethernet II**, which include the Ethertype directly into the header, without any need for extension.
+
+Ethernet II framing vs Ethernet 802.3 framing:
+
+![ethernet_II_frame(1)](https://user-images.githubusercontent.com/72258375/151205372-e738a943-2a05-4f3d-b302-f3766f5c1412.png)
+
+You can see how using Ethernet 802.3 frames reduce the payload size by the LLC+SNAP header, and overcomplicate things. This is why Ethernet II is here to stay, as It is less complicated and allow for a bigger payload. This also explains why **Etherfield** values are always over 1500 bytes in value. That value was chosen because the maximum length of the payload field of an Ethernet 802.3 frame is 1500 octets (0x05DC). Thus if the field's value is greater than or equal to 1536, the frame must be an Ethernet II frame, with that field being a type field. If it's less than or equal to 1500, it must be an IEEE 802.3 frame, with that field being a length field. Values between 1500 and 1536, exclusive, are undefined. This convention allows software to determine whether a frame is an Ethernet II frame or an IEEE 802.3 frame, allowing the coexistence of both standards on the same physical medium. 
 
 ### MAC layer
 
