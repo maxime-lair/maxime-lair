@@ -57,6 +57,18 @@ While Ethernet frames are usually 1518 bytes long, they can potentially appear s
 
 You can probably notice there is multiple types of Ethernet frames, namely the one respecting IEEE 802.3 and Ethernet II. The main difference is IEEE 802.3 uses a LLC header that will be described later. Ethernet II type is largely more used in comparaison.
 
+### Wi-Fi 802.11
+
+While we will not dive too deep into the 802.11 specifications, It is nice to compare it to Ethernet (wired) frames. They have different types of frames (control, management and data), we will just focus on the data frames. They are larger in size, but requires the use of a LLC header in the payload. It always starts with a frame control which contains the options of the wireless connection:
+
+![frame_control_wifi](https://user-images.githubusercontent.com/72258375/151413155-187b58e3-ea5b-4889-8e4a-d77e6e773b49.png)
+
+It uses MAC address, like Ethernet, but differ in their header definition:
+
+![wifi_data_frame](https://user-images.githubusercontent.com/72258375/151413335-08bdd76e-a194-487b-81ea-7b9c057b2ad7.png)
+
+Notice how similar It is to Ethernet, but allows for a bigger payload, since wireless devices are often battery powered, and they try to reduce the number of frames sent as It makes devices last longer.
+
 ### Alternatives
 
 In the data-link layer, while the IEEE 802 is often used, a few alternatives exist to perform the same function. It often depends on the network hardware used to transmit data on the physical layer.
@@ -206,10 +218,13 @@ The main protocol of this layer is **Internet Protocol** or IP. It has the task 
 
 ### IPv4
 
-**TODO** IP packet header
+Similar to the logic in other OSI layers,  an IP packet consists of a header section followed by the data It encapsulates. One difference could be that It does not add a footer, so there is no data checksum for the packet, It is usually fine as the data link layer, through the *CRC* of Ethernet or *FCS* of 802.11 WLAN, can already detects most errors, and higher layers also adds data checksum (e.g. **TCP** for the transport layer).
 
-https://en.wikipedia.org/wiki/File:IPv4_Packet-en.svg
+An IPv4 header format looks like this:
 
+![IP_header(1)](https://user-images.githubusercontent.com/72258375/151434788-47602a1a-2fdc-4788-b472-127bc045f0c3.png)
+
+You can easily deduce from the different section that IPv4 is mainly used for encapsulating the higher layer, while allowing fragmentation and routing.
 
 #### IPv4 address
 
@@ -235,34 +250,95 @@ A few address block are reserved for special use, notably *127.0.0.0/8* for loop
 | 172.16.0.0/12 | 172.16.0.0 - 172.31.255.255 | 1 048 576 |
 | 192.168.0.0/16 | 192.168.0.0 - 192.168.255.255 | 65 536 |
 
-Fragmentation + reassembly
+#### Fragmentation and reassembly
 
-https://en.wikipedia.org/wiki/IPv4
+The IP enables traffic between networks who are usually of diverse physical nature (no one has the same hardware), harnessing different transmission speed and *MTU*. When one network wants to transmit datagrams to a network with a smaller PDU, It may need to fragment its datagrams. This is done on the network layer by IPv4 routers.
+
+This is only possible if a packet allows itself to be fragmented, as seen on the IPv4 flags header. At each fragmentation, 4 elements will require to be changed : *length*, *flag*, *fragment offset* and *header checksum*. One interesting feature is the possibility of fragmented packet to be re-fragmented thanks to the fragment offset being a 8-byte blocks multiple.
+
+For example, imagine sending a 3320 bytes packet through this topology with different MTUs:
+
+![IP_fragment(1)](https://user-images.githubusercontent.com/72258375/151445118-80ad73a7-43f4-4aaf-934c-5a510ae47dfc.png)
+
+While this depend on some configuration, most routers will not re-assemble even if the sum of two fragments are under the MTU, and It will only be done once the packet arrives onto its destination.
 
 #### ARP
 
-https://en.wikipedia.org/wiki/Address_Resolution_Protocol
+Now that we understand how IPv4 addressing and fragmentation works, we can try to understand how IPv4 address are linked to their lower layer address such as MAC. This specific resolution is done through **ARP** which is *address resolution protocol*. Since this protocol resolves layer 3 addresses with layer 2 addresses, It can be considered a link and network layer protocol.
+
+The protocol uses a simple message format containing one address resolution request or response. The following example would be for IPv4 over Ethernet ARP packet, since hardware type (MAC) is 48 bits and protocol address (IPv4) is 16 bits. All systems retain an ARP cache table to avoid re-doing this request everytime.
+
+![ARP_packet](https://user-images.githubusercontent.com/72258375/151448359-5db68f38-9ffd-42ec-9871-13e46511d095.png)
+
+*ARP* can also be used as an announcement protocol where a host can periodically broadcast a *gratuitous ARP (GARP)* message to announce its IP or MAC address change. It is usually done at startup, but will avoid flooding the network with those requests, as It could be considered ARP spoofing by malicious hosts.
 
 ### IPv6
 
-https://en.wikipedia.org/wiki/IPv6
+IPv6 is the most recent version of the Internet protocol. It was developped to deal with the long-anticipated issue of IPv4 address exhaustion. 4 billions devices is not a lot considering the world population and growing appetite for electronic devices such as smartphones.
 
-#### IPv6 address
+In IPv6, devices are assigned a unique IP address for identification **and location definition**. IPv6 uses **128-bit addresses**, allowing around the same number of atoms available on Earth (e.g. pratically infinite).
 
+![ipv6(1)](https://user-images.githubusercontent.com/72258375/151451939-ce4e0074-e827-4825-9abe-5925e4979d9a.png)
 
+*IPv6* has a minimum packet size of 1280 bytes, consisting of 40-byte base header and 1240 bytes of payload.
+
+*IPv6* does not fragment its packets, as It uses Path MTU Discovery protocol to determine the network path between two hosts, this protocol is simply about activating the DF flag in IP header and record its path.
+
+A few address types exist :
+
+| Address type | Sub-type | Description | Example |
+| --- | --- | --- | --- |
+| Unicast | Global Unique address | Globally reachable by any host | 2001:581:f3d1:241f::/64 |
+| Unicast | Link-local | Required on every interface, but packets cannot leave or enter the interface | fe80::/10 |
+| Unicast | Loopback | Same as 127.0.0.1/8 in IPv4 | ::1/128 |
+| Unicast | Unique local addresses | Equivalent to IPv4 private ranges | fc00::/7 |
+| Multicast | |  Used to send a packet from one to many (always start with *ff*) | ff00::/8 |
+| Anycast | | Used to send a packet from one to a group but only send to the first least expensive destination | | 
 
 #### NDP
 
+It shares the same function as ARP in IPv4. It uses five ICMPv6 packet types for the purpose of :
+- Router solicitation
+- Router advertisement
+- Neighbor solicitation
+- Neighbor advertisement
+- Redirect
 
+I will not describe the details, as we just to know It reproduces ARP function for MAC address resolution on IPv6.
 
 ### ICMP
 
-https://en.wikipedia.org/wiki/IPv6
+It is used by network devices to send error messages and operational information indicating success or failure when communicating with another IP address. It is always encapsulated in an IPv4 packet, so It is part of the transport layer.
+
+For example, every device forwarding an IP datagram first decrements the TTL field in the IP header by one. If the resulting TTL is 0, the packet is discarded and an ICMP *time exceeded in transit* message is sent to the datagram's source address. This is what the command *traceroute* essentially does.
+
+A header format is defined as such:
+
+![ICMP_packet](https://user-images.githubusercontent.com/72258375/151454652-f09b788f-18bb-4ea1-b8c2-a446cb1b04c6.png)
+
+ICMP error messages contain a data section that includes a copy of the entire IPv4 header, plus the first eight bytes of data from the IPv4 packet that caused the error message. It can go up to 576 bytes in length.
+
+A few examples of control messages types:
+
+| Type value | Type |  Subtype (code) | Description |
+| --- | --- | --- | --- |
+| 0 | Echo reply | 0 | Used to ping |
+| 3 | Destination unreachable | 0 to 15 | Indicates the routing reason |
+| 4 | Redirect message | 0 to 3 | Used for ToS or by network & host |
+| 11 | Time exceeded | 0 to 1 | Reassembly or TTL expiration |
+| 12 | Bad IP header | 0 to 2 | Missing parameter or option, wrong computation in IPv4 header |
+
+Some routers do not allow ICMP message to pass through due to security reason as It can be used to probe your network, but It is most often used for debugging and troubleshooting reason.
 
 ### Nat / Masquerade
 
+**WIP**
+
+Limited IP address blocks led to NAT
 
 ### OSPF
+
+Open shortest path first
 
 https://en.wikipedia.org/wiki/Open_Shortest_Path_First
 
@@ -285,7 +361,7 @@ https://en.wikipedia.org/wiki/Open_Shortest_Path_First
 >
 > https://www.al-enterprise.com/-/media/assets/internet/documents/spb-architecture-tech-brief-en.pdf
 >
->
+> https://www.redhat.com/sysadmin/what-you-need-know-about-ipv6
 >
 >
 >
