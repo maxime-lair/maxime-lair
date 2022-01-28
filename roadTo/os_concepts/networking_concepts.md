@@ -274,7 +274,7 @@ The protocol uses a simple message format containing one address resolution requ
 
 ### IPv6
 
-IPv6 is the most recent version of the Internet protocol. It was developped to deal with the long-anticipated issue of IPv4 address exhaustion. 4 billions devices is not a lot considering the world population and growing appetite for electronic devices such as smartphones.
+IPv6 is the most recent version of the Internet protocol. It was developped to deal with the long-anticipated issue of IPv4 address exhaustion. 4 billions devices is not a lot considering the world population and growing appetite for electronic devices such as smartphones. Today, [IPv6 deployment](https://www.google.com/intl/en/ipv6/statistics.html#tab=per-country-ipv6-adoption) is largely popular in higher population countries such as China or India, but most countries still largely use IPv4 in comparaison. It is deemed to be changed over the next few decades, as China announced plans to complete a national IPv6 rollout by 2030.
 
 In IPv6, devices are assigned a unique IP address for identification **and location definition**. IPv6 uses **128-bit addresses**, allowing around the same number of atoms available on Earth (e.g. pratically infinite).
 
@@ -332,15 +332,43 @@ Some routers do not allow ICMP message to pass through due to security reason as
 
 ### Nat / Masquerade
 
-**WIP**
+**Network address ranslation (NAT)** is a method of mapping an IP address space into another by modifying network address information in the IP header of the packets while they are in transit across a traffic routing device.
 
-Limited IP address blocks led to NAT
+It has become an essential tool in conserving global address space in the face of IPv4 address exhaustion. In fact, one Internet-routable IP address of a NAT gateway can be used for an entire private network.
+
+There is two types of NAT operations:
+- Destination-based (**DNAT**)
+- Source-based (**SNAT**)
+
+> :triangular_flag_on_post: 	For some vendors, *SNAT* can also mean *stateful* (e.g. Cisco) or *secure* (e.g. F5 Networks or Microsoft)
+
+#### DNAT
+
+*Destination network address translation* is a technique for transparently changing the *destination* IP address of a routed packet and performing the inverse function for any replies. Any router situated between two endpoints can perform this transformation, and It is commonly used to publish a service located in a private network on a publicly accessible IP address. This use is also called **port forwarding** or **DMZ** when used on an entire server. If you wish to protect your server behind a firewall, this is a needed feature.
+
+#### SNAT
+
+Also called *One-to-Many NAT*, It is a technique used for transparently changing the *source* IP address of a routed packet and performing the inverse function for any replies. The majority of network address translators map multiple private hosts to one publicly exposed IP address. The way It works is a router in that network has a private address of that address space. The router is also connected to the Internet with a public address.
+
+As traffic passes from the local network to the Internet, the source address in each packet is translated on the fly from a private address to the public address. The router tracks basic data about each active connection (particularly the destination address and port). When a reply returns to the router, it uses the connection tracking data it stored during the outbound phase to determine the private address on the internal network to which to forward the reply.
+
+To logic works well for *one-to-one* conversion, but in order to map multiple address (*one-to-many*), a feature called **masquerade** is needed. It allows all of the hosts on a private network to use the Internet at the price of a single IP address. The word *masquerade* comes from a party or dance where people wear masks, and It pretty much defines the logic behind it. 
+
+**NAT schema here**
+
+Using **Masquerade** today is a must, as It also forbid external network to access any of your private network since none of the hosts on the supported network behind the router are ever directly seen, and lays the foundation for applying security measures to your private hosts. It comes at a cost, since It requires CPU ressources for the translation and forbid you from hosting services relying on incoming sessions to work (such as FTP).
 
 ### OSPF
 
-Open shortest path first
+To end the presentation of the network layer, we can talk about the **Open Shortest Path First (OSPF)** routing protocol used for IP networks. It is widely used in large enterprise networks and large service provider as the de-facto protocol in a single routing domain. It is part of *Interior gateway protocol (IGP)*, alternatives are *RIP* or *IS-IS*.
 
-https://en.wikipedia.org/wiki/Open_Shortest_Path_First
+It gathers link state information from available routers and constructs a topology map of the network. The topology is then used to routes packets based solely on their destination IP address. *OSPF* detects changes, such as link failures, and converges on a new *loop-free* routing structure within seconds. It computes the shortest-path tree for each route based on [Dijkstra's algorithm](https://clementmihailescu.github.io/Pathfinding-Visualizer/#). 
+
+*OSPF* uses *multicast* addressing for distributing route information within a broadcast domain to all IP routers but without traversing them.
+
+You can try it out [here](https://topolograph.com/), for example:
+
+![image](https://user-images.githubusercontent.com/72258375/151634796-8dc1c35a-c0d2-429d-a6c2-ddfeaa8cb838.png)
 
 ## Useful commands and utilities
 
