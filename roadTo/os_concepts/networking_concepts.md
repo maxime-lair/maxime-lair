@@ -372,19 +372,106 @@ You can try it out [here](https://topolograph.com/), for example:
 
 ## Useful commands and utilities
 
+I will be using a *CentOS 9 Stream* which came out in late 2021, some commands might differ depending on the Linux distribution you use, but the way It works will remain mostly the same.
+
 ### IP command
 
-Check your own IP
+Your main tool out of the box will be the `ip` command, It is a recent command, and people often still uses `ifconfig` instead. `ip` utility regroups many tools into one single command, such as `arp`, `route`, `ifconfig`, `netstat`. If you use it in scripts, make sure the command is installed !
 
-Change your IP configuration by device
+I created some hosts in a private LAN, and have them able to access the Internet, [check out here for more details](projectBob/pfsense).
 
-Show your IP tables
+First, let's show our network interface with `ip link`
 
-Activate NAT
+![image](https://user-images.githubusercontent.com/72258375/151658037-0e7a54b9-0131-4b49-8902-f197162de17a.png)
+
+We could even print statistics on their use with the `-s` argument:
+
+![image](https://user-images.githubusercontent.com/72258375/151658067-b481edee-5a83-43db-8f36-88e7cd36e905.png)
+
+This command will show you the **linklayer** interfaces, and thus only the MAC addresses for each device, they show you the main characterics, which is mainly about :
+- Device enabled and connected (e.g. *UP* and *LOWER_UP* respectively)
+- The device capability (*BROADCAST*, *MULTICAST*)
+- Available MTU (notice the loopback higher MTU as It is in memory only, [this value was bumped up in 2012](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=0cf833aefaa85bbfce3ff70485e5534e09254773))
+- Some QoS values
+- the assigned MAC value and its broadcast
+
+We can even use it to bring our device down with `ip link set <interface> up/down`
+
+![image](https://user-images.githubusercontent.com/72258375/151658366-375f6c6c-bec3-434b-a65c-a1454bdf1683.png)
+
+But It requires sudo-access since It could potentially impact others users.
+
+Now, let's move onto the network layer, and show our IP address with `ip address`
+
+![image](https://user-images.githubusercontent.com/72258375/151658443-72844697-e78e-49ef-8ce2-73268e8c2589.png)
+
+Notice how the command returns the linklayer informations, and then an IPv4 and IPv6 address. You can see the loopback address being `127.0.0.1/8` and `::1/128`, but more interestingly, the *ens32* device has a private IPv4 address (private block *10.x.x.x*) and link-local IPv6 address (starts with *fe80::*).
+
+The utility also allows us to check the multicast address available with `ip maddr`:
+
+![image](https://user-images.githubusercontent.com/72258375/151658590-6641006d-9958-45bb-9f42-083d6c380734.png)
+
+And our local ARP table with `ip neigh`, which is empty at first, but get filled as we start discussing with others hosts on LAN:
+
+![image](https://user-images.githubusercontent.com/72258375/151658655-5cbb6651-59ac-495c-8a35-2c9266156e8e.png)
+
+The command `ip route` can also be used to print our routing table, used by our host to route *packets* on the network:
+
+![image](https://user-images.githubusercontent.com/72258375/151658687-53b68286-98ec-46cc-83bc-5c159c4c7ca6.png)
+
+Here you can see two simple rule which says: 
+- route everything by default to our gateway located on *10.0.0.1* through *ens32* network interface
+- Anything directed onto the private IP block *10.0.0.0/24* can be reached on device *ens32* with IPv4 source address *10.0.0.2*
+
+These rules are applied from the top and then goes down, and If It doesn't match any rule, It simply get dropped. You can notice that since the default rule is first, the second one will never be applied.
+
+While this is not dependent on the layer 2 or 3, you can also use `ss` to show your host services open to the network
+
+![image](https://user-images.githubusercontent.com/72258375/151659567-21717c02-f969-4e75-84a7-0c2f2715d5b6.png)
+
+### /etc
+
+Most networks configuration are located in `/etc`, but the exact files are not always the same depending on your distribution.
+
+One of the most common interface file is `/etc/sysconfig/network-scripts/` but here mine is empty:
+
+![image](https://user-images.githubusercontent.com/72258375/151659772-7cd675d9-8bd0-4eb9-8ca3-734fe184bd5f.png)
+
+But I can definitely see some network interfaces defined in `/etc/networks`
+
+![image](https://user-images.githubusercontent.com/72258375/151659791-19031c83-9a74-46c2-aa0c-93117ce8d8d9.png)
+
+In my distribution, those settings are done through *NetworkManager* and located in `/etc/NetworkManager/system-connections`
+
+![image](https://user-images.githubusercontent.com/72258375/151659889-bc11dc37-ade5-4bd4-badd-52f33e18c8cf.png)
+
+You can use `nmcli` to interact with it
+
+![image](https://user-images.githubusercontent.com/72258375/151659932-8e4d1699-4c35-4761-9ed3-6283fdcd50dd.png)
 
 ### /proc
 
+A lot of informations about your configuration can also be accessed directly onto `/proc/net`
+
+![image](https://user-images.githubusercontent.com/72258375/151660038-74348219-4053-4e2d-a705-d2b5e99f5716.png)
+
+You focus on accessing process specific statistics, such as the ARP_cache:
+
+![image](https://user-images.githubusercontent.com/72258375/151660129-91236562-899f-407f-acca-355da1bb481b.png)
+
 ### /sys
+
+You can also access the `/sys` directory for more device related informations, a simple search can help us where to look for:
+
+![image](https://user-images.githubusercontent.com/72258375/151660259-aa5d1c04-5633-4ba7-b9d5-0cd9f1c6925f.png)
+
+Which allows us to check *ens32* configuration:
+
+![image](https://user-images.githubusercontent.com/72258375/151660285-d9cd4f57-5df3-4c29-b1d7-36605885c419.png)
+
+Which was a symbolic link to our hardware device definition:
+
+![image](https://user-images.githubusercontent.com/72258375/151660341-0708cf9c-a942-4343-bff6-1d9c475c57a3.png)
 
 ## Conclusion
 
@@ -404,4 +491,4 @@ Not everything was explained, and if you wish to focus your attention on a speci
 >
 > https://www.oreilly.com/openbook/linag2/book/ch11.html
 >
->
+> https://access.redhat.com/sites/default/files/attachments/rh_ip_command_cheatsheet_1214_jcs_print.pdf
