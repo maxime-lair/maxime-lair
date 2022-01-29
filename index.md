@@ -21,7 +21,7 @@ I will try to focus on the inner architecture and useful commands, without divin
    - [Virtualization](roadTo/os_concepts/virtualization)
    - [Threads and concurrency](roadTo/os_concepts/threads_and_concurrency)
    - [Sockets](roadTo/os_concepts/sockets)
-   - [Networking concepts](roadTo/os_concepts/networking_concepts) **WIP**
+   - [Networking concepts](roadTo/os_concepts/networking_concepts)
 2. [Terminal fu](roadTo/terminal_fu)
    - Bash scripting
    - Vim
