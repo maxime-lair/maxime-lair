@@ -378,7 +378,7 @@ I will be using a *CentOS 9 Stream* which came out in late 2021, some commands m
 
 Your main tool out of the box will be the `ip` command, It is a recent command, and people often still uses `ifconfig` instead. `ip` utility regroups many tools into one single command, such as `arp`, `route`, `ifconfig`, `netstat`. If you use it in scripts, make sure the command is installed !
 
-I created some hosts in a private LAN, and have them able to access the Internet, [check out here for more details](projectBob/pfsense).
+I created some hosts in a private LAN, and have them able to access the Internet, [check out here for more details](../projectBob/pfsense).
 
 First, let's show our network interface with `ip link`
 
