@@ -354,7 +354,7 @@ As traffic passes from the local network to the Internet, the source address in 
 
 To logic works well for *one-to-one* conversion, but in order to map multiple address (*one-to-many*), a feature called **masquerade** is needed. It allows all of the hosts on a private network to use the Internet at the price of a single IP address. The word *masquerade* comes from a party or dance where people wear masks, and It pretty much defines the logic behind it. 
 
-**NAT schema here**
+![masquerade_nat(1)](https://user-images.githubusercontent.com/72258375/151639841-94e3b058-4552-42eb-9140-542896e1d626.png)
 
 Using **Masquerade** today is a must, as It also forbid external network to access any of your private network since none of the hosts on the supported network behind the router are ever directly seen, and lays the foundation for applying security measures to your private hosts. It comes at a cost, since It requires CPU ressources for the translation and forbid you from hosting services relying on incoming sessions to work (such as FTP).
 
@@ -374,12 +374,23 @@ You can try it out [here](https://topolograph.com/), for example:
 
 ### IP command
 
+Check your own IP
+
+Change your IP configuration by device
+
+Show your IP tables
+
+Activate NAT
+
 ### /proc
 
 ### /sys
 
 ## Conclusion
 
+We have seen how the linklayer uses frame to transport data across a physical medium, and how It encapsulates its data thanks to MAC addressing. This allows the network layer to use IP for fragmentation and global addressing on a wider variety of networks. While IPv4 and IPv6 can be different in the way they work, they share the same idea of providing a unique address for a device across the globe. A lot was to cover, between ethernet/wifi frames, IP addresses and its link to MAC through ARP, and how NAT try to cover the problem of IP exhaustion. A few commands allows you to handle this on your host, and they are usually vital for people to learn whenever they create a new host, as they are your gateway to the entire Internet.
+
+Not everything was explained, and if you wish to focus your attention on a specific subject, check out the links below for more information.
 
 > Credits
 >
@@ -391,6 +402,6 @@ You can try it out [here](https://topolograph.com/), for example:
 >
 > https://www.redhat.com/sysadmin/what-you-need-know-about-ipv6
 >
->
+> https://www.oreilly.com/openbook/linag2/book/ch11.html
 >
 >
