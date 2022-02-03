@@ -3,7 +3,7 @@
 # Import the theme
 theme: jekyll-theme-chirpy
 
-#plugins:
+plugins:
 - jekyll-remote-theme
 - jekyll-include-cache
 
