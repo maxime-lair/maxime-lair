@@ -1,0 +1,5 @@
+User-agent: *
+
+Disallow: /norobots/
+
+Sitemap: https://maxime-lair.github.io/maxime-lair/sitemap.xml
