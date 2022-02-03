@@ -1,0 +1,10 @@
+#  The contact options.
+
+-
+  type: github
+  icon: 'fab fa-github'
+
+-
+  type: url
+  icon: 'fas fa-ethernet'   # icons powered by <https://fontawesome.com/>
+  url:  'https://binsh.io'                  # Fill with your Linkedin homepage
