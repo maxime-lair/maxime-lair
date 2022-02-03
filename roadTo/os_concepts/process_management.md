@@ -130,7 +130,7 @@ _- /sys_
 _- /mdstat_
 _- /schedstat_
 _- /vmstat_
-_- /meminfo_numa_
+_- /meminfo\_numa_
 _- /self_
 
 In the case of datadog, they then can end up showing this type of visualization (% of CPU/log ratio):
