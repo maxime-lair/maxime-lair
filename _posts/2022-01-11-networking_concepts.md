@@ -17,7 +17,7 @@ We will try to understand IP v4/v6 works without diving too much into details, a
 
 We could also call it understanding the network layer, as we will cover *ARP/ICMP/MAC/LLC*
 
-We will however not dive into TCP/UDP specifics, as It would make the article too clustered with informations, and It was already partly covered in the [sockets](sockets) article
+We will however not dive into TCP/UDP specifics, as It would make the article too clustered with informations, and It was already partly covered in the sockets article
 
 ## Datalink layer
 
@@ -389,7 +389,7 @@ I will be using a *CentOS 9 Stream* which came out in late 2021, some commands m
 
 Your main tool out of the box will be the `ip` command, It is a recent command, and people often still uses `ifconfig` instead. `ip` utility regroups many tools into one single command, such as `arp`, `route`, `ifconfig`, `netstat`. If you use it in scripts, make sure the command is installed !
 
-I created some hosts in a private LAN, and have them able to access the Internet, [check out here for more details](../../projectBob/pfsense).
+I created some hosts in a private LAN, and have them able to access the Internet, **check out the PFSense article for more details**
 
 First, let's show our network interface with `ip link`
 
