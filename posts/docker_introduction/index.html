@@ -1,0 +1,1349 @@
+<!DOCTYPE html><html lang="en" ><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><meta name="day-prompt" content="days ago"><meta name="hour-prompt" content="hours ago"><meta name="minute-prompt" content="minutes ago"><meta name="justnow-prompt" content="just now"><meta name="generator" content="Jekyll v4.2.1" /><meta property="og:title" content="Docker introduction" /><meta name="author" content="Maxime Lair" /><meta property="og:locale" content="en" /><meta name="description" content="This article is the first introduction to docker, and how to run containers on a single host." /><meta property="og:description" content="This article is the first introduction to docker, and how to run containers on a single host." /><link rel="canonical" href="https://maxime-lair.github.io/maxime-lair/posts/docker_introduction/" /><meta property="og:url" content="https://maxime-lair.github.io/maxime-lair/posts/docker_introduction/" /><meta property="og:site_name" content="Bin/sh" /><meta property="og:type" content="article" /><meta property="article:published_time" content="2021-12-26T19:00:00+01:00" /><meta name="twitter:card" content="summary" /><meta property="twitter:title" content="Docker introduction" /><meta name="twitter:site" content="@twitter_username" /><meta name="twitter:creator" content="@Maxime Lair" /><meta name="google-site-verification" content="google_meta_tag_verification" /> <script type="application/ld+json"> {"author":{"@type":"Person","name":"Maxime Lair"},"description":"This article is the first introduction to docker, and how to run containers on a single host.","url":"https://maxime-lair.github.io/maxime-lair/posts/docker_introduction/","@type":"BlogPosting","headline":"Docker introduction","dateModified":"2021-12-26T19:00:00+01:00","datePublished":"2021-12-26T19:00:00+01:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://maxime-lair.github.io/maxime-lair/posts/docker_introduction/"},"@context":"https://schema.org"}</script><title>Docker introduction | Bin/sh</title><link rel="apple-touch-icon" sizes="180x180" href="/maxime-lair/assets/img/favicons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/maxime-lair/assets/img/favicons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/maxime-lair/assets/img/favicons/favicon-16x16.png"><link rel="manifest" href="/maxime-lair/assets/img/favicons/site.webmanifest"><link rel="shortcut icon" href="/maxime-lair/assets/img/favicons/favicon.ico"><meta name="apple-mobile-web-app-title" content="Bin/sh"><meta name="application-name" content="Bin/sh"><meta name="msapplication-TileColor" content="#da532c"><meta name="msapplication-config" content="/maxime-lair/assets/img/favicons/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://fonts.gstatic.com"><link rel="preconnect" href="https://www.google-analytics.com" crossorigin="use-credentials"><link rel="dns-prefetch" href="https://www.google-analytics.com"><link rel="preconnect" href="https://www.googletagmanager.com" crossorigin="anonymous"><link rel="dns-prefetch" href="https://www.googletagmanager.com"><link rel="preconnect" href="https://cdn.jsdelivr.net"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.11.2/css/all.min.css"><link rel="stylesheet" href="/maxime-lair/assets/css/style.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@1.0.1/dist/bootstrap-toc.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/magnific-popup@1.1.0/dist/magnific-popup.min.css"> <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script> <script type="text/javascript"> class ModeToggle { static get MODE_KEY() { return "mode"; } static get DARK_MODE() { return "dark"; } static get LIGHT_MODE() { return "light"; } static get ID() { return "mode-toggle"; } constructor() { if (this.hasMode) { if (this.isDarkMode) { if (!this.isSysDarkPrefer) { this.setDark(); } } else { if (this.isSysDarkPrefer) { this.setLight(); } } } let self = this; /* always follow the system prefers */ this.sysDarkPrefers.addEventListener("change", () => { if (self.hasMode) { if (self.isDarkMode) { if (!self.isSysDarkPrefer) { self.setDark(); } } else { if (self.isSysDarkPrefer) { self.setLight(); } } self.clearMode(); } self.notify(); }); } /* constructor() */ get sysDarkPrefers() { return window.matchMedia("(prefers-color-scheme: dark)"); } get isSysDarkPrefer() { return this.sysDarkPrefers.matches; } get isDarkMode() { return this.mode === ModeToggle.DARK_MODE; } get isLightMode() { return this.mode === ModeToggle.LIGHT_MODE; } get hasMode() { return this.mode != null; } get mode() { return sessionStorage.getItem(ModeToggle.MODE_KEY); } /* get the current mode on screen */ get modeStatus() { if (this.isDarkMode || (!this.hasMode && this.isSysDarkPrefer)) { return ModeToggle.DARK_MODE; } else { return ModeToggle.LIGHT_MODE; } } setDark() { $('html').attr(ModeToggle.MODE_KEY, ModeToggle.DARK_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.DARK_MODE); } setLight() { $('html').attr(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE); } clearMode() { $('html').removeAttr(ModeToggle.MODE_KEY); sessionStorage.removeItem(ModeToggle.MODE_KEY); } /* Notify another plugins that the theme mode has changed */ notify() { window.postMessage({ direction: ModeToggle.ID, message: this.modeStatus }, "*"); } } /* ModeToggle */ const toggle = new ModeToggle(); function flipMode() { if (toggle.hasMode) { if (toggle.isSysDarkPrefer) { if (toggle.isLightMode) { toggle.clearMode(); } else { toggle.setLight(); } } else { if (toggle.isDarkMode) { toggle.clearMode(); } else { toggle.setDark(); } } } else { if (toggle.isSysDarkPrefer) { toggle.setLight(); } else { toggle.setDark(); } } toggle.notify(); } /* flipMode() */ </script><body data-spy="scroll" data-target="#toc"><div id="sidebar" class="d-flex flex-column align-items-end" lang="en"><div class="profile-wrapper text-center"><div id="avatar"> <a href="/maxime-lair/" alt="avatar" class="mx-auto"> <img src="/maxime-lair/assets/img/favicons/avatar.gif" alt="avatar" onerror="this.style.display='none'"> </a></div><div class="site-title mt-3"> <a href="/maxime-lair/">Bin/sh</a></div><div class="site-subtitle font-italic">Have fun reading</div></div><ul class="w-100"><li class="nav-item"> <a href="/maxime-lair/" class="nav-link"> <i class="fa-fw fas fa-home ml-xl-3 mr-xl-3 unloaded"></i> <span>HOME</span> </a><li class="nav-item"> <a href="/maxime-lair/roadTo/" class="nav-link"> <i class="fa-fw fas fa-road ml-xl-3 mr-xl-3 unloaded"></i> <span>ROAD TO DEVOPS</span> </a><li class="nav-item"> <a href="/maxime-lair/bin-sh/" class="nav-link"> <i class="fa-fw fas fa-tools ml-xl-3 mr-xl-3 unloaded"></i> <span>BIN-SH</span> </a><li class="nav-item"> <a href="/maxime-lair/categories/" class="nav-link"> <i class="fa-fw fas fa-stream ml-xl-3 mr-xl-3 unloaded"></i> <span>CATEGORIES</span> </a><li class="nav-item"> <a href="/maxime-lair/tags/" class="nav-link"> <i class="fa-fw fas fa-tag ml-xl-3 mr-xl-3 unloaded"></i> <span>TAGS</span> </a><li class="nav-item"> <a href="/maxime-lair/archives/" class="nav-link"> <i class="fa-fw fas fa-archive ml-xl-3 mr-xl-3 unloaded"></i> <span>ARCHIVES</span> </a><li class="nav-item"> <a href="/maxime-lair/about/" class="nav-link"> <i class="fa-fw fas fa-info-circle ml-xl-3 mr-xl-3 unloaded"></i> <span>ABOUT</span> </a></ul><div class="sidebar-bottom mt-auto d-flex flex-wrap justify-content-center align-items-center"> <button class="mode-toggle btn" aria-label="Switch Mode"> <i class="fas fa-adjust"></i> </button> <span class="icon-border"></span> <a href="https://github.com/maxime-lair" aria-label="github" target="_blank" rel="noopener"> <i class="fab fa-github"></i> </a></div></div><div id="topbar-wrapper" class="row justify-content-center topbar-down"><div id="topbar" class="col-11 d-flex h-100 align-items-center justify-content-between"> <span id="breadcrumb"> <span> <a href="/maxime-lair/"> Home </a> </span> <span>Docker introduction</span> </span> <i id="sidebar-trigger" class="fas fa-bars fa-fw"></i><div id="topbar-title"> Post</div><i id="search-trigger" class="fas fa-search fa-fw"></i> <span id="search-wrapper" class="align-items-center"> <i class="fas fa-search fa-fw"></i> <input class="form-control" id="search-input" type="search" aria-label="search" autocomplete="off" placeholder="Search..."> <i class="fa fa-times-circle fa-fw" id="search-cleaner"></i> </span> <span id="search-cancel" >Cancel</span></div></div><div id="main-wrapper"><div id="main"><div class="row"><div id="core-wrapper" class="col-12 col-lg-11 col-xl-8"><div class="post pl-1 pr-1 pl-sm-2 pr-sm-2 pl-md-4 pr-md-4"><h1 data-toc-skip>Docker introduction</h1><div class="post-meta text-muted"><div> By <em> <a href="https://github.com/maxime-lair">Maxime Lair</a> </em></div><div class="d-flex"><div> <span> Posted <em class="timeago" date="2021-12-26 19:00:00 +0100" data-toggle="tooltip" data-placement="bottom" title="Sun, Dec 26, 2021, 7:00 PM +0100" >Dec 26, 2021</em> </span> <span class="readtime" data-toggle="tooltip" data-placement="bottom" title="6429 words"> <em>35 min</em> read</span></div></div></div><div class="post-content"><p>This article is the first introduction to docker, and how to run containers on a single host.</p><p>The end-goal is to have an infrastructure running several services:</p><ul class="task-list"><li class="task-list-item" hide-bullet><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Setup docker and docker-compose<li class="task-list-item" hide-bullet><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Web application powered by httpd<li class="task-list-item" hide-bullet><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Traefik to handle routing and load-balancing<li class="task-list-item" hide-bullet><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" checked="checked" />Prometheus &amp; Grafana for monitoring purpose<li class="task-list-item" hide-bullet><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Node_exporter (for host metrics) and Cadvisor (for docker metrics) on each container</ul><p>All these applications will be running inside dockers, as to be scalable in the future</p><p>It will start as a single host project and will slowly be turning into multiple-hosts</p><h1 id="docker">Docker</h1><p>We need to install docker on each host, It has to be done through a sudo or root user as the final process will be running with root privileges (constraint of docker).</p><p>We follow the <a href="https://docs.docker.com/engine/install/centos/">instructions as per recommended</a> to guide us through</p><p>We start off with the first docker installation</p><h2 id="pre-requisites">Pre-requisites<a href="#pre-requisites" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><p>First we check if docker is already installed, we do not want to install on top of an already available version.</p><p>Then, we add docker repository as It is not available natively on Centos</p><pre><code class="language-Shell">docker 
+
+sudo yum install -y yum-utils
+
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+</code></pre><p><strong>Note</strong> Since we are running it on Centos 8, It would have been nice to have used <code class="language-plaintext highlighter-rouge">dnf</code> instead of <code class="language-plaintext highlighter-rouge">yum</code> as the latter is getting deprecated.</p><h2 id="install-docker-engine">Install docker engine<a href="#install-docker-engine" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><p>Docker requires several tools to work, named <strong>docker engine</strong> and <strong>containerd</strong></p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>sudo yum install docker-ce docker-ce-cli containerd.io
+</pre></table></code></div></div><p>It takes around 1m30 to complete.</p><h2 id="test-docker">Test docker<a href="#test-docker" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><p>Now we can start the docker engine and run a simple hello-world</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+</pre><td class="rouge-code"><pre>$ sudo systemctl start docker                                                                               $ $ sudo docker run hello-world                                                                                   
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+2db29710123e: Pull complete 
+Digest: sha256:cc15c5b292d8525effc0f89cb299f1804f3a725c8d05e158653a563f15e4f685
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+</pre></table></code></div></div><p>We check a few commands to familiarize ourselves:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre>$ sudo docker images                                                                                           
+REPOSITORY    TAG       IMAGE ID       CREATED        SIZE
+hello-world   latest    feb5d9fea6a5   2 months ago   13.3kB
+
+$ sudo docker container ls                                                                                     
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+</pre></table></code></div></div><p>Then we stop the service previously started</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>$ sudo systemctl stop docker                                                                                   
+Warning: Stopping docker.service, but it can still be activated by:
+  docker.socket
+$ sudo systemctl stop docker.socket
+</pre></table></code></div></div><p><strong>Note</strong> It seems when starting docker, you start two units: service and socket. You have to manually stop them both as one could wake the other up if any request comes in. I have no idea why It is done this way, start and stop should be a one-liner command.</p><p>We stop the service because we might have more settings to adjust, and this is not the proper way to activate it anyway in the long run (we want to use <strong>systemctl enable</strong> to have it available at start-up).</p><h2 id="post-install-shenanigan">Post-install shenanigan<a href="#post-install-shenanigan" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><p>The Docker daemon binds to a Unix socket instead of a TCP port. By default that Unix socket is owned by the user root and other users can only access it using sudo. The Docker daemon always runs as the root user.</p><p>We do not want to preface the docker command with sudo, so we create a Unix group called docker and add users to it. When the Docker daemon starts, it creates a Unix socket accessible by members of the docker group.</p><h3 id="dedicated-user-creation">Dedicated user creation<a href="#dedicated-user-creation" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>We will create a user named <strong>produser</strong> for running docker, I simply added it with useradd and provided it with a password.</p><p>The group docker is created by default now, so we just have to add the new user to the group</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>$ sudo usermod -aG docker produser
+</pre></table></code></div></div><h3 id="test-the-new-user">Test the new user<a href="#test-the-new-user" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>Now all we need to do is test creating a small docker container with this new user</p><p>We connect as produser</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>$ su produser
+</pre></table></code></div></div><p>And we test a simple hello-world</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>$ docker run hello-world
+</pre></table></code></div></div><p>It won’t work as we previously stopped the docker daemon</p><p>We connect back on our sudo user and we enable the service (so It’s available at next reboot) and start it</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>$ sudo systemctl enable docker.service
+$ sudo systemctl start docker.service
+$ sudo systemctl enable containerd.service
+$ sudo systemctl start containerd.service
+</pre></table></code></div></div><p>Then we connect back on our new user, and test its status</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre>$ systemctl status containerd.service
+● containerd.service - containerd container runtime
+   Loaded: loaded (/usr/lib/systemd/system/containerd.service; enabled; vendor preset: disabled)
+   Active: active (running)
+     Docs: https://containerd.io
+ Main PID: 84811 (containerd)
+</pre></table></code></div></div><p>It’s running well, we can try our hello-world</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>$ docker run hello-world
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+</pre></table></code></div></div><p>It works, we can move on onto the next part, starting each docker container containing our different service (web, monitoring, proxy)</p><h2 id="httpd-web-server">Httpd web server<a href="#httpd-web-server" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><p>We want to deliver web pages through our server by hosting a docker container running a httpd process</p><p>We could use an alpine docker image, and add the web server onto it, but there is already an image available on the official website: https://hub.docker.com/_/httpd</p><p>To spice it up, we will try to scale the number of web servers, each running the same image, they will deliver the web server on the host on differents ports ranging from 35000 to 35100. My objective at the end is to have redundancy, if the first one fails, we can always send them onto the second.</p><p>The web content we will deliver is the one available at https://github.com/maxime-lair/binsh</p><h3 id="test-the-docker-image">Test the docker image<a href="#test-the-docker-image" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>First, let’s test the image provided. We do this to ensure any issues down-the-line would come from our HTML pages or docker configuration</p><p>We create a new repository, where we will work from, and ultimately have our web pages and docker configuration available at:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre>$ mkdir httpd-service
+$ cd httpd-service
+</pre></table></code></div></div><p>Then we can test our docker image:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre><td class="rouge-code"><pre>$ docker run -dit --name my-apache-app -p 8080:80 -v "$PWD":/usr/local/apache2/htdocs/ httpd:2.4
+Unable to find image 'httpd:2.4' locally
+2.4: Pulling from library/httpd
+e5ae68f74026: Pull complete 
+bc36ee1127ec: Pull complete 
+0e5b7b813c8c: Pull complete 
+a343142ddd8a: Pull complete 
+94c13707a187: Pull complete 
+Digest: sha256:0c8dd1d9f90f0da8a29a25dcc092aed76b09a1c9e5e6e93c8db3903c8ce6ef29
+Status: Downloaded newer image for httpd:2.4
+478222b0c467cb72d244761c55a327750dd8edb5bb0bb33e9ac6972356ad4fe6
+</pre></table></code></div></div><p>It started running, can we check the process and web page ?</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre><td class="rouge-code"><pre>$ docker ps
+CONTAINER ID   IMAGE       COMMAND              CREATED              STATUS              PORTS                                   NAMES
+478222b0c467   httpd:2.4   "httpd-foreground"   About a minute ago   Up About a minute   0.0.0.0:35000-&gt;80/tcp, :::35000-&gt;80/tcp   my-apache-app
+$ curl http://localhost:35000
+&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"&gt;
+&lt;html&gt;
+ &lt;head&gt;
+  &lt;title&gt;Index of /&lt;/title&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+&lt;h1&gt;Index of /&lt;/h1&gt;
+&lt;ul&gt;&lt;/ul&gt;
+&lt;/body&gt;&lt;/html&gt;
+</pre></table></code></div></div><p>The image is running well, able to deliver our web pages onto the host, let’s stop it and write our docker files now !</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>$ docker stop 478222b0c467
+478222b0c467
+$ docker ps                 
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+</pre></table></code></div></div><h3 id="docker-compose">Docker compose<a href="#docker-compose" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>Since we want to start two web servers, let’s use docker compose instead of two separate docker files</p><p>In order to <a href="https://docs.docker.com/compose/install/">install it</a>, we need to switch back to our sudo user</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>$ sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+</pre></table></code></div></div><p>We add execution rights on the binary</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>$ sudo chmod +x /usr/local/bin/docker-compose
+</pre></table></code></div></div><p>Then we test it by switching back to <strong>produser</strong></p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre><td class="rouge-code"><pre>$ su produser
+$ docker-compose --version
+docker-compose version 1.29.2, build 5becea4c
+</pre></table></code></div></div><p><strong>Note</strong> We will not use any Dockerfile as we do not need to edit the image configuration.</p><p>Now we edit our docker-compose.yml file</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre><td class="rouge-code"><pre>$ cat docker-compose.yml
+version: "3.9"
+services:
+        web:
+                ports:
+                        - "35000-35100:80"
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+                networks:
+                        - webzone
+networks:
+        webzone:
+                driver: bridge
+</pre></table></code></div></div><p>We indicate one service called <strong>web</strong> running on range 35000-35100 on the host and mapped to default httpd port (80)</p><p>Then we indicate the HTML files we want to use, and where to place them on the container</p><p>We could do it through a Dockerfile, but the advantage of using <strong>volumes</strong> is the live update, if we modify any files on /binsh/ on the host, we do not need to restart any docker container, as the changes will be effective immediately. If we did a COPY through a dockerfile, this would not be the case.</p><p>Now we retrieve the web files we want to host:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>$ git clone git@github.com:maxime-lair/binsh.git
+</pre></table></code></div></div><p>Advantage is : If I want to update my webfiles, I can leave the container running, and just re-do a git clone to have it available live.</p><p>Now we can start the docker-compose:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre><td class="rouge-code"><pre>$ docker-compose up -d --scale web=10
+Creating network "httpd-service_webzone" with driver "bridge"
+WARNING: The "web" service specifies a port on the host. If multiple containers for this service are created on a single host, the port will clash.
+Creating httpd-service_web_1  ... done
+Creating httpd-service_web_2  ... done
+Creating httpd-service_web_3  ... done
+Creating httpd-service_web_4  ... done
+Creating httpd-service_web_5  ... done
+Creating httpd-service_web_6  ... done
+Creating httpd-service_web_7  ... done
+Creating httpd-service_web_8  ... done
+Creating httpd-service_web_9  ... done
+Creating httpd-service_web_10 ... done
+</pre></table></code></div></div><p>We check on the host if we see our ports opened:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre><td class="rouge-code"><pre>$ netstat -tlpn                                         
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:35025           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35026           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35027           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35028           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35029           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35030           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35031           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35032           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35033           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:35034           0.0.0.0:*               LISTEN      -
+</pre></table></code></div></div><p>Sure enough, our web servers are up and running, able to deliver the web pages on port 35xxx</p><p>If you check httpd logs, we notice some warnings at the web server start-up because we did not change the ServerName in the httpd configuration, as the process is unsure of the correct IP It is being hosted on. When we get our proxy running, we will be able to update this to our FQDN binsh.io</p><p>If you want to start your container in the background, you can add <strong>-d</strong> argument on the start</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre>$ docker-compose up -d  
+Starting httpd-service_web ... done
+</pre></table></code></div></div><p>But as for the docker warning, we now have an issue on our hands: how to load-balance any requests made to binsh.io on port 80 to the different web servers available on port 35xxx ? We could use Nginx, but we would have to manually update its configuration everytime we remove or add a container.</p><p>Let’s try to use a new proxy solution called <strong>Traefik</strong></p><h2 id="traefik">Traefik<a href="#traefik" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><h3 id="adding-load-balancer-and-reverse-proxy">Adding load balancer and reverse-proxy<a href="#adding-load-balancer-and-reverse-proxy" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>From its website</p><blockquote><p>Traefik is a modern HTTP reverse proxy and load balancer that makes deploying microservices easy. Traefik integrates with your existing infrastructure components (Docker, Swarm mode, Kubernetes, Marathon, Consul, Etcd, Rancher, Amazon ECS, …) and configures itself automatically and dynamically.</p></blockquote><p>Traefik upgraded from V1 to V2 last year, and It’s a bit difficult to understand how It now all works with services, endpoints, middlewares, etc.</p><p>Let’s try it nonetheless</p><p>First, we create two configurations for traefik, a static configuration, which tells him what do we expose (where do we want requests to come in)</p><p><strong>traefik.yml</strong></p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+</pre><td class="rouge-code"><pre> ## traefik.yml
+
+entryPoints:
+        http:
+                address: ":80"
+        https:
+                address: ":443"
+
+
+# Docker configuration backend
+providers:
+  file:
+          filename: dynamic_conf.yml
+          watch: true
+  docker:
+          endpoint: "unix:///var/run/docker.sock"
+          exposedByDefault: false
+
+# API and dashboard configuration
+api:
+  insecure: true
+</pre></table></code></div></div><p>We ask to listen on port 80 for http and https for 443, the usual. Then we provide him a dynamic configuration file, that we will explain later, we want to keep watching this file in case of update so It can be applied live. Then we tell him to listen for any new containers on the host, as we want to monitor/route onto them</p><p>Lastly, we expose the API, in an insecure way for now, we will add TLS/HTTPS later</p><p>We create our <strong>dynamic_conf.yml</strong> file</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre><td class="rouge-code"><pre>http:
+    routers:
+        http_router:
+            rule: "Host(`binsh.io`)"
+            service: web
+    services:
+        web:
+            loadBalancer:
+                servers:
+                    - url: "http://httpd/
+</pre></table></code></div></div><p>Here we provide a simple rule for routing: if we receive requests for our FQDN <strong>binsh.io</strong>, we load balance it on any servers responding to <strong>httpd</strong></p><p>What is this httpd url then ? Since they will be running on the same docker-compose, they will share the same default network. In this case, traefik container will be able to call up any httpd container by this url.</p><p>The <strong>docker-compose.yml</strong> file:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+</pre><td class="rouge-code"><pre>version: "3.9"
+services:
+        httpd:
+                ports:
+                        - "35000-35100:80"
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+			- ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - webzone
+        traefik:
+                image: traefik:latest
+                command: --api.insecure=true --providers.docker
+                ports:
+                        # The HTTP port
+                        - "80:80"
+                        # The Web UI (enabled by --api.insecure=true)
+                        - "8080:8080"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                networks:
+                        - webzone
+                        - proxy
+
+networks:
+        webzone:
+                driver: bridge
+                internal: true
+        proxy:
+                driver: bridge
+</pre></table></code></div></div><p>A few changes to be noted:</p><ul><li>We added networks, so we can avoid exposing our dozens of possible web servers ports on the host, they will be in their own, secluded network <strong>webzone</strong>. Only traefik will be able to serve as bridge to the outside (to the host and beyond).<li>We added traefik service, so It can run together with the httpd server.<li>We added httpd configuration to change the servername to our FQDN</ul><p>Now, we can start and scale our web servers depending on our needs</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre>$ docker-compose up --scale httpd=3 -d
+WARNING: The "httpd" service specifies a port on the host. If multiple containers for this service are created on a single host, the port will clash.
+Starting httpd-service_httpd_1   ... done
+Starting httpd-service_httpd_2   ... done
+Starting httpd-service_httpd_3   ... done
+Starting httpd-service_traefik_1 ... done
+</pre></table></code></div></div><p>And we are now able to access our website from outside</p><p><img data-src="https://user-images.githubusercontent.com/72258375/146694753-a71ea54c-182b-47c8-a268-7a30494017e5.png" alt="image" data-proofer-ignore></p><p>Each GET is load balanced on the 3 different containers we just spawned.</p><p>Only the needed ports are opened on the host</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre>$ netstat -tlpn
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name             
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:8080            0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -      
+</pre></table></code></div></div><p>We also have access to traefik dashboard on port 8080</p><p><img data-src="https://user-images.githubusercontent.com/72258375/146694799-44df59fa-1b25-4a0f-9582-e1d9c5725683.png" alt="image" data-proofer-ignore></p><h3 id="adding-tls-and-https">Adding TLS and HTTPS<a href="#adding-tls-and-https" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>Now that we have access on port 80, let’s try to redirect on port 443 and handles everything more securely</p><p>We create a file hosting our TLS certificates, and we need to review its file right (or we will get a slap on the wrist later when we start traefik)</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre>$ touch acme.json
+$ chmod 600 acme.json
+</pre></table></code></div></div><p>This file will hold the TLS certificates created by <strong>Let’s encrypt</strong></p><p>First, we will secure our <strong>docker-compose.yml</strong> by activating the secure api, removing the dashboard port, and sharing the acme.json file</p><p>We also added port 443 for HTTPS, since we will be redirecting all our traffic onto it. We want to be <a href="https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Strict_Transport_Security_Cheat_Sheet.html">HSTS</a> approved !</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+</pre><td class="rouge-code"><pre>$ cat docker-compose.yml 
+version: "3.9"
+services:
+        httpd:
+                ports:
+                        - "35000-35100:80"
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+                        - ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - webzone
+        traefik:
+                image: traefik:latest
+                restart: unless-stopped
+                command: --api --providers.docker
+                ports:
+                        # The HTTP port
+                        - "80:80"
+                        - "443:443"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                        - $PWD/acme.json:/acme.json
+                networks:
+                        - webzone
+                        - proxy
+
+networks:
+        webzone:
+                driver: bridge
+                internal: true
+        proxy:
+                driver: bridge
+
+</pre></table></code></div></div><p>Then we move onto our <strong>traefik.yml</strong> file, we want 3 main points added:</p><ul><li>Redirect all HTTP trafic (port 80) to HTTPS (port 443)<li>Secure the API (some kind of authentication required to access it)<li>Add a certificate resolver - this will handled by Let’s encrypt for validating TLS certificate (not expired, right domain, can be trusted, etc.)</ul><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+</pre><td class="rouge-code"><pre>$ cat traefik.yml 
+## traefik.yml
+
+entryPoints:
+        http:
+                address: ":80"
+                http:
+                        redirections:
+                                entryPoint:
+                                        to: https
+        https:
+                address: ":443"
+
+# Docker configuration backend
+providers:
+  file:
+          filename: dynamic_conf.yml
+          watch: true
+  docker:
+          endpoint: "unix:///var/run/docker.sock"
+          exposedByDefault: false
+
+# API and dashboard configuration
+api:
+        dashboard: true
+
+certificatesResolvers:
+        letsencrypt:
+                acme:
+                        email: &lt;DEDICATED EMAIL ADDRESS&gt;@gmail.com
+                        storage: acme.json
+                        httpChallenge:
+                                entryPoint: http
+</pre></table></code></div></div><p><strong>Note</strong> You have to create a mail address to receive importants messages (expiration, etc.) when activating TLS, <a href="https://letsencrypt.org/docs/expiration-emails/">see</a>. For now this address is external, but we would want to have a self-hosted mail server with MX/SPF/DKIM/DMARC protection</p><p>Now, onto the interesting part, we have multiple things to do:</p><ul><li>Authenticate user trying to connect to Traefik API<li>Route users onto the dashboard or onto the web server depending on their requests (since we removed port 8080)<li>Make sure they are using HTTPS</ul><p>This is all done through routers and middlewares on Traefik, routers will catch requests depending on their <strong>rule</strong> to then direct them onto a list of <strong>middlewares</strong> (which can authenticate, redirect, add headers, etc.), and if they managed to get through, route them onto a <strong>service</strong></p><p>The logic will always be in Traefik-v2 : EntryPoints -&gt; routers -&gt; middlewares -&gt; services -&gt; providers</p><p>For authentication, we will use <a href="https://doc.traefik.io/traefik/v2.0/middlewares/basicauth/">BasicAuth</a> with user:pass logic, although we could have used any external authentication services (AWS, etc.)</p><p><strong>Note</strong> I had some trouble when generating them on my Centos8 with <strong>htpasswd</strong> as they were not recognized in Traefik. I had to use an online generator.</p><p>You can use this command to generate your own <a href="https://xkcd.com/936/">user/password</a></p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre>$ echo $(htpasswd -nb xkcd &lt;VERY SECURE PASSWORD&gt;) | sed -e s/\\$/\\$\\$/g
+xkcd:$$apr1$$&lt;VERY SECURE HASH&gt;
+</pre></table></code></div></div><p>Now we can write our <strong>dynamic_conf.yml</strong></p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+</pre><td class="rouge-code"><pre>$ cat dynamic_conf.yml 
+http:
+    routers:
+        http_router:
+            rule: "Host(`binsh.io`)"
+            service: web
+            middlewares:
+                    - traefik-https-redirect
+            tls:
+                    certResolver: letsencrypt
+        traefik_router:
+            entrypoints: http
+            rule: "Host(`traefik.binsh.io`)"
+            service: api@internal
+            middlewares: 
+                - traefik-https-redirect
+        traefik_secure_router:
+            entrypoints: https
+            rule: "Host(`traefik.binsh.io`)"
+            middlewares: 
+                - traefik-auth
+            tls:
+                    certResolver: letsencrypt
+            service: api@internal
+        
+    services:
+        web:
+            loadBalancer:
+                servers:
+                    - url: "http://httpd/"
+
+
+    middlewares:
+            traefik-auth:
+                    basicAuth:
+                            users: 
+                                - "&lt;USER&gt;:$apr1$&lt;PASS HASH&gt;"
+            traefik-https-redirect:
+                    redirectScheme:
+                            scheme: https
+                            permanent: true
+</pre></table></code></div></div><p>We use a subdomain to redirect users going for web content (top domain binsh.io) and the ones going for Traefik dashboard (traefik.binsh.io)</p><p>All traffic is now forced into HTTPS with a valid certificate (which will be automatically renewed by Traefik), and we only force an authentication for users going onto Traefik dashboard</p><p>We can now start our docker-compose to finish adding HTTPS and auth to our infrastructure</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre>$ docker-compose up -d --scale httpd=3
+Starting httpd-service_traefik_1 ... 
+Starting httpd-service_traefik_1 ... done
+Starting httpd-service_httpd_1   ... done
+Creating httpd-service_httpd_2   ... done
+Creating httpd-service_httpd_3   ... done
+</pre></table></code></div></div><p>HTTPS on binsh.io: <img data-src="https://user-images.githubusercontent.com/72258375/146785667-71cc256b-aa69-496c-b026-99b84485f3cd.png" alt="image" data-proofer-ignore></p><p>And on traefik.binsh.io (after basicAuth): <img data-src="https://user-images.githubusercontent.com/72258375/146786440-28a8859e-1460-4aa3-937a-c9f09eab7776.png" alt="image" data-proofer-ignore></p><p>Now that we added our proxy, we are able to have HTTPS content on our docker container, our infrastructure could be running live. But we need a way to monitor this host. Imagine we run into a disk failure, we need to have metrics on how It happened, and be alerted when It happens (or before even).</p><h2 id="prometheus-and-grafana">Prometheus and Grafana<a href="#prometheus-and-grafana" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><p>We want to install Prometheus and Grafana, they will be our monitoring stronghold to retrieve and analyze any collected metrics.</p><p>We will not bother with high-availability/fault-tolerant issues for now, this is a subject on which I’m not finding any design patterns. Only answer I got was “Use sharding and only one prometheus server per datacenter”, but It doesn’t cover any case on when the prometheus server has an issue (hardware failure or else).</p><h3 id="prometheus-installation">Prometheus installation<a href="#prometheus-installation" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><blockquote><p>Prometheus is an open-source systems monitoring and alerting toolkit originally built at SoundCloud in 2012. Prometheus collects and stores its metrics as time series data, i.e. metrics information is stored with the timestamp at which it was recorded, alongside optional key-value pairs called labels.</p></blockquote><p><a href="https://sre.google/sre-book/production-environment/">Why use time series collection ?</a></p><p>Typically, metrics are best used for monitoring, profiling, and alerting. The efficiency of summarizing data makes them great for monitoring and performance profiling because you can economically store long retention periods of data, giving you dashboards that look back over time. They are also great for alerting because they are fast and can trigger notifications almost instantaneously without the need for expensive queries. Metrics represent roughly 90% of the monitoring workload. <a href="https://www.splunk.com/en_us/blog/devops/metric-log-monitoring-really-need.html">source</a></p><p>Later on, we will think on adding a log-based monitoring (like Filebeat or else) and trace-based monitoring (like Jaeger).</p><p>Again, we have a provided prometheus docker that we can use out-of-the-box:</p><ul><li>https://docs.docker.com/config/daemon/prometheus/<li>https://hub.docker.com/r/prom/prometheus</ul><p>Our endgoal is to have a prometheus service available which we can access on <strong>prometheus.binsh.io</strong></p><p>We create a <strong>prometheus.yml</strong> which will be the configuration, It should be static across all prometheus docker since It will define scrape_interval and targets</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+</pre><td class="rouge-code"><pre>$ cat prometheus.yml 
+# my global config
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+      monitor: 'binsh-monitor'
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first.rules"
+  # - "second.rules"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=&lt;job_name&gt;` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'docker'
+         # metrics_path defaults to '/metrics'
+         # scheme defaults to 'http'.
+
+    static_configs:
+      - targets: ['172.17.0.1:9323']
+</pre></table></code></div></div><p><strong>Note</strong> Experimental test: docker daemon can now export metrics onto Prometheus</p><p>The IP for the docker job is the docker0 interface</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>$ ip addr show docker0
+3: docker0: &lt;NO-CARRIER,BROADCAST,MULTICAST,UP&gt; mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:2f:68:96:ac brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+</pre></table></code></div></div><p>Funny thing is : <a href="https://docs.docker.com/config/daemon/prometheus/">the documentation recommends using localhost</a>, but we can’t access those metrics from the loopback device when running prometheus inside docker. Even if we try to expose the port on the host, It does not work.</p><p>You have to amend (or create if not existing) <strong>/etc/docker/daemon.json</strong> and add</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre>$ cat /etc/docker/daemon.json
+{
+  "metrics-addr" : "0.0.0.0:9323",
+  "experimental" : true
+}
+</pre></table></code></div></div><p>We have to bind it on 0.0.0.0 (any addr) because prometheus might need to access it from outside, but this could be a security issue and we will tackle it later.</p><p>Then we have to restart the docker service (be careful of shutting down any docker running)</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre>$ sudo systemctl daemon-reload                         
+$ sudo systemctl restart docker
+</pre></table></code></div></div><p>We will later on check on the differences between cadvisor metrics and the one retrieved from the daemon itself.</p><p>For now, we only bother about monitoring our single host with a static configuration. Later on, when we scale to multiple hosts, we will have to dynamically update the host list to search for them. It can be done with DNS, AWS, IP, file based configuration.</p><h3 id="grafana-installation">Grafana installation<a href="#grafana-installation" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><blockquote><p>Grafana open source is open source visualization and analytics software. It allows you to query, visualize, alert on, and explore your metrics, logs, and traces no matter where they are stored. It provides you with tools to turn your time-series database (TSDB) data into insightful graphs and visualizations.</p></blockquote><p>The project has since then branched into multiples components, with Grafana dashboard (the one we are using), Loki (Prometheus but for logs) and Tempo (for correlation)</p><p>Grafana docker:</p><ul><li>https://grafana.com/docs/grafana/latest/installation/docker/<li>https://hub.docker.com/r/grafana/grafana</ul><p>Our endgoal is to have a grafana service available at <strong>grafana.binsh.io</strong> and able to reach prometheus service</p><p>Configuration-wise, we want to amend a few parameters,</p><p>Normally, you could retrieve a base file with this type of command:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>docker run --rm grafana/grafana-oss cat /etc/grafana/grafana.ini &gt; base-custom.ini
+</pre></table></code></div></div><p>But the way this image was made is .. with never-ending script waiting for logs, so the container can never stop itself with <strong>–rm</strong> argument</p><p>So we have to improvize by creating the container, executing a command inside it, then shutting it down, use it at your own risk:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+</pre><td class="rouge-code"><pre>docker run -d grafana/grafana | xargs -I % sh -c 'docker exec % cat /etc/grafana/grafana.ini &gt; base-grafana.ini; docker stop %'
+</pre></table></code></div></div><p>It creates a new file <strong>base-grafana.ini</strong> with the default grafana configuration.</p><p>The file is 1k lines long, but everything has defaults so we will just leave what’s important to us in case we need to amend them.</p><p>Then we create our target <strong>grafana.ini</strong> that will be used on the grafana container spawned by docker-compose</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+</pre><td class="rouge-code"><pre>$ cat grafana.ini
+################################### General ###################################
+app_mode = production
+
+instance_name = grafana.binsh.io
+
+#################################### Paths ####################################
+[paths]
+# Directory where grafana can store logs
+;logs = /var/log/grafana
+
+# Directory where grafana will automatically scan and look for plugins
+;plugins = /var/lib/grafana/plugins
+
+# folder that contains provisioning config files that grafana will apply on startup and while running.
+;provisioning = conf/provisioning
+
+#################################### Server ####################################
+[server]
+# The http port  to use
+;http_port = 3000
+
+#################################### Analytics ####################################
+[analytics]
+reporting_enabled = false
+check_for_updates = false
+
+#################################### Security ####################################
+[security]
+disable_initial_admin_creation = true
+admin_user = &lt;VERY SECURE USER&gt;
+admin_password = &lt;VERY SECURE PASSWORD&gt;
+
+#################################### Users ###############################
+[users]
+allow_sign_up = false
+
+#################################### Basic Auth ##########################
+[auth.basic]
+;enabled = true
+
+</pre></table></code></div></div><h3 id="docker-compose-file">Docker-compose file<a href="#docker-compose-file" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>Now that we have our grafana and prometheus configurations, we can create our docker-compose file</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+</pre><td class="rouge-code"><pre>$ cat docker-compose.yml
+version: "3.9"
+services:
+        prometheus:
+                ports:
+                        - "36200:9090"
+                image: "prom/prometheus"
+                volumes:
+                        - prometheus-storage:/prometheus
+                        - $PWD/prometheus.yml:/etc/prometheus/prometheus.yml
+                networks:
+                        - proxy
+        grafana:
+                ports:
+                        - "36300:3000"
+                image: "grafana/grafana-oss"
+                volumes:
+                        - grafana-storage:/var/lib/grafana
+                        - $PWD/grafana.ini:/etc/grafana/grafana.ini
+                depends_on:
+                        - "prometheus"
+                networks:
+                        - proxy
+
+networks:
+        proxy:
+                driver: bridge
+
+
+volumes:
+        grafana-storage:
+        prometheus-storage:
+</pre></table></code></div></div><p>For now we will let them on the host network, later on we will have them behind Traefik in their own secluded network.</p><p>One part stands out : We added two volumes so we do not lose any data in case any container crash</p><ul><li>On grafana It saves us any dashboard/user we created<li>On prometheus It saves all metrics retrieved from the host, but I think prometheus keeps anything under 2 hours in memory and only writes it on disk If it is any older, so we would lose any recent data (We will need data replication to avoid this)</ul><p>Also we wait on prometheus to start for spinning up Grafana, as the dashboard would be useless without any data to pull from.</p><h3 id="services-configuration">Services configuration<a href="#services-configuration" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>Now all we need to do is check our service health, for now they are not behind any proxy, so we can access them on their port directly (ie. :36200/36300)</p><p>Let’s check Prometheus, are our targets defined in our configuration able to spit up metrics?</p><p><img data-src="https://user-images.githubusercontent.com/72258375/146982871-2c00b65a-05e4-4888-b384-7b0f4398c41c.png" alt="image" data-proofer-ignore></p><p>Now can our Grafana retrieve those Prometheus metrics ?</p><p>We connect to grafana and add our datasource:</p><p><img data-src="https://user-images.githubusercontent.com/72258375/146982447-8b41f70b-e8e1-4bca-a659-724bfa8b8221.png" alt="image" data-proofer-ignore></p><p>And It works ! We have our (already provided) dashboard with metrics:</p><p><img data-src="https://user-images.githubusercontent.com/72258375/146982682-a0e36452-0084-4948-bd31-929080318930.png" alt="image" data-proofer-ignore></p><p>We could create our own dashboard and even our own metrics once we get up and running, but for now we will just use already-made dashboard.</p><h3 id="networks-and-routing">Networks and routing<a href="#networks-and-routing" class="anchor"><i class="fas fa-hashtag"></i></a></h3></h3><p>Now that prometheus and grafana are running well in their own containers, we can move onto securing the stack</p><p>Let’s start by questionning ourselves on what we want to expose.</p><p>We currently have this setup:</p><p><img data-src="https://user-images.githubusercontent.com/72258375/146987420-fa4c338b-6a11-498d-a784-5cfdfe2e0018.png" alt="image" data-proofer-ignore></p><p>Our end-goal is to have something cleaner like this:</p><p><img data-src="https://user-images.githubusercontent.com/72258375/146994602-7e22b07b-2537-4a4c-a3d1-3d6fa0127f4e.png" alt="image" data-proofer-ignore></p><p>So we will need to perform these two steps:</p><ul><li>Separate Traefik into its own docker-compose and add rules for docker/prometheus routing<li>Put prometheus/Grafana in their own network space</ul><h4 id="separate-traefik">Separate Traefik<a href="#separate-traefik" class="anchor"><i class="fas fa-hashtag"></i></a></h4></h4><p>First, let’s split our current docker-compose for httpd-service.</p><p>Currently, we have:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+</pre><td class="rouge-code"><pre>cat docker-compose.yml
+version: "3.9"
+services:
+        httpd:
+		ports: 35000-35100:80
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+                        - ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - webzone
+        traefik:
+                image: traefik:latest
+                restart: unless-stopped
+                command: --api --providers.docker
+                ports:
+                        # The HTTP port
+                        - "80:80"
+                        - "443:443"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                        - $PWD/acme.json:/acme.json
+                networks:
+                        - webzone
+                        - proxy
+
+networks:
+        webzone:
+                driver: bridge
+                internal: true
+        proxy:
+                driver: bridge
+</pre></table></code></div></div><p>First, we dont have to set ports nor networks on httpd container, It wasn’t necessary as traefik and httpd are sharing the same network (http-service_default), we can remove it.</p><p>From docker-compose docs on networks:</p><blockquote><p>By default Compose sets up a single network for your app. Each container for a service joins the default network and is both reachable by other containers on that network, and discoverable by them at a hostname identical to the container name.</p></blockquote><p>Then we can remove the entire traefik part, It will be moved to its own docker-compose file in another directory</p><p>Let’s create this directory before we proceed any further</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre><td class="rouge-code"><pre>$ mkdir traefik-service
+$ tree .
+.
+├── httpd-service
+│   ├── acme.json
+│   ├── binsh
+│   │   ├── index.html
+│   ├── docker-compose.yml
+│   ├── dynamic_conf.yml
+│   ├── my-httpd.conf
+│   └── traefik.yml
+├── monitoring-service
+│   ├── base-grafana.ini
+│   ├── docker-compose.yml
+│   ├── grafana_data
+│   ├── grafana.ini
+│   ├── prometheus_data
+│   └── prometheus.yml
+└── traefik-service
+</pre></table></code></div></div><p>We simply copy <strong>docker-compose.yml</strong> and traefik related files located in httpd-service into traefik-service (so we will not have to retype everything once we get there)</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre><td class="rouge-code"><pre>$ cp httpd-service/docker-compose.yml traefik-service 
+$ cp httpd-service/dynamic_conf.yml traefik-service  
+$ cp httpd-service/traefik.yml traefik-service     
+$ tree traefik-service 
+traefik-service
+├── docker-compose.yml
+├── dynamic_conf.yml
+└── traefik.yml
+└── acme.json
+</pre></table></code></div></div><p>Now we can modify our docker-compose in httpd-service directory</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre><td class="rouge-code"><pre>$ cat docker-compose.yml
+version: "3.9"
+services:
+        httpd:
+                image: "httpd:2.4"
+                volumes:
+                        - ./binsh/:/usr/local/apache2/htdocs/
+                        - ./my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+                networks:
+                        - traefik
+                        - default
+networks:
+        traefik:
+                external: true
+                name: traefik-service_default
+</pre></table></code></div></div><p>Here we only have our httpd server running. We could use a single command line instead of using docker-compose, but if we ever need to add a database or more, we can easily add it.</p><p>One inconvenience is we have to join Traefik network which will be started through another docker-compose, and we run into <a href="https://en.wikipedia.org/wiki/Chicken_or_the_egg">“chicken or egg”</a> issue. We can’t start our docker-compose unless traefik network is up, this is usually fine as we can’t access the server anyway if our proxy is not up, but this is still a hard dependency which will require scheduling</p><p>We could have made Traefik join httpd network instead, but If we think about it, scaling-wise, this is a bad idea. We do not want to amend Traefik docker-compose file everytime we will add or remove a service like httpd (as It will have to update its network every time).</p><p>Now let’s set up <strong>traefik-service</strong> (that we previously copied files onto)</p><p>We only have to amend our docker-compose file by removing the httpd:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre><td class="rouge-code"><pre>$ cat docker-compose.yml 
+version: "3.9"
+services:
+        traefik:
+                image: traefik:latest
+                restart: unless-stopped
+                command: --api --providers.docker
+                ports:
+                        - "80:80"
+                        - "443:443"
+                volumes:
+                        # So that Traefik can listen to the Docker events
+                        - /var/run/docker.sock:/var/run/docker.sock
+                        - $PWD/traefik.yml:/etc/traefik/traefik.yml
+                        - $PWD/dynamic_conf.yml:/dynamic_conf.yml
+                        - $PWD/acme.json:/acme.json
+</pre></table></code></div></div><p>Let’s clean-up any networks remnants and start traefik</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>$ docker network prune
+$ docker-compose up -d                
+Creating network "traefik-service_default" with the default driver
+Creating traefik-service_traefik_1 ... done
+</pre></table></code></div></div><p>Then we start our httpd containers</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre>$ docker-compose up -d --scale httpd=3   
+Creating network "httpd-service_default" with the default driver
+Creating httpd-service_httpd_1 ... done
+Creating httpd-service_httpd_2 ... done
+Creating httpd-service_httpd_3 ... done
+</pre></table></code></div></div><p>And we test web access (either by browser or command line):</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre><td class="rouge-code"><pre>$ curl -IL http://binsh.io
+HTTP/1.1 308 Permanent Redirect
+Location: https://binsh.io/
+
+HTTP/2 200 
+
+$ curl -IL http://traefik.binsh.io
+HTTP/1.1 308 Permanent Redirect
+Location: https://traefik.binsh.io/
+
+HTTP/2 401 
+www-authenticate: Basic realm="traefik"
+</pre></table></code></div></div><p>Both routes are working as expected (redirection from http to https and basic-auth on Traefik dashboard), so we can move on the next part</p><h4 id="add-prometheus-and-grafana-logic-for-traefik-routing">Add prometheus and grafana logic for Traefik routing<a href="#add-prometheus-and-grafana-logic-for-traefik-routing" class="anchor"><i class="fas fa-hashtag"></i></a></h4></h4><p>Let’s add prometheus and grafana routing on Traefik configuration now !</p><p>We don’t have much to do as we already did it for binsh.io</p><p>First we create two DNS records, we could use A (IP &lt;-&gt; FQDN) or CNAME (FQDN &lt;-&gt; FQDN) types here, but I will prefer using CNAME for now as they are hosted on the same IP (saves cost and time for your computer, you are welcome)</p><p>Here we use <strong>nslookup</strong> to check DNS records, It’s packaged in bind-utils on Centos8 (not installed by default)</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre><td class="rouge-code"><pre>$ nslookup prometheus.binsh.io
+Non-authoritative answer:
+prometheus.binsh.io     canonical name = binsh.io.
+Name:   binsh.io
+
+$ nslookup grafana.binsh.io   
+Non-authoritative answer:
+grafana.binsh.io        canonical name = binsh.io.
+Name:   binsh.io
+</pre></table></code></div></div><p>And we get the resulting dynamic configuration for Traefik:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+</pre><td class="rouge-code"><pre>$ cat dynamic_conf.yml 
+http:
+        routers:
+                http_router:
+                        rule: "Host(`binsh.io`)"
+                        service: web
+                        middlewares:
+                                - traefik-https-redirect
+                        tls:
+                                certResolver: letsencrypt
+                grafana_router:
+                        rule: "Host(`grafana.binsh.io`)"
+                        service: grafana
+                        middlewares:
+                                - traefik-https-redirect
+                                - traefik-auth
+                        tls:
+                                certResolver: letsencrypt
+                prometheus_router:
+                        rule: "Host(`prometheus.binsh.io`)"
+                        service: prometheus
+                        middlewares:
+                                - traefik-https-redirect
+                                - traefik-auth
+                        tls:
+                                certResolver: letsencrypt
+                traefik_router:
+                        entrypoints: http
+                        rule: "Host(`traefik.binsh.io`)"
+                        service: api@internal
+                        middlewares: 
+                                - traefik-https-redirect
+                traefik_secure_router:
+                        entrypoints: https
+                        rule: "Host(`traefik.binsh.io`)"
+                        middlewares: 
+                                - traefik-auth
+                        tls:
+                                certResolver: letsencrypt
+                        service: api@internal
+        
+        services:
+                web:
+                        loadBalancer:
+                                servers:
+                                        - url: "http://httpd/"
+                grafana:
+                        loadBalancer:
+                                servers:
+                                        - url: "http://grafana:3000/"
+                prometheus:
+                        loadBalancer:
+                                servers:
+                                        - url: "http://prometheus:9090/"
+
+        middlewares:
+                traefik-auth:
+                        basicAuth:
+                                users: 
+                                        - "&lt;USER&gt;:$apr1$&lt;PASSWORD VERY SECURE&gt;"
+                traefik-https-redirect:
+                        redirectScheme:
+                                scheme: https
+                                permanent: true
+</pre></table></code></div></div><p>We added two routers and services, one for Grafana on port 3000 and one for Prometheus on port 9090. Unfortunately Traefik is unable to find these port dynamically like he did for httpd. I guess we would have to change prom/grafana default port to 80 and It could work without indicating ports, but why bother.</p><p>We also added HTTPS redirection and basic-auth on both services, because why not.</p><p>Now we will be able to access prometheus and grafana through Traefik as long as they are on the same docker network.</p><h4 id="put-prometheus-and-grafana-behind-traefik">Put prometheus and grafana behind Traefik<a href="#put-prometheus-and-grafana-behind-traefik" class="anchor"><i class="fas fa-hashtag"></i></a></h4></h4><p>Now we can move Grafana and Prometheus into their own network space:</p><p>The resulting docker-compose file:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+</pre><td class="rouge-code"><pre>$ cat docker-compose.yml 
+version: "3.9"
+services:
+        prometheus:
+                image: "prom/prometheus"
+                volumes:
+                        - prometheus-storage:/prometheus
+                        - $PWD/prometheus.yml:/etc/prometheus/prometheus.yml
+                networks:
+                        - traefik
+        grafana:
+                image: "grafana/grafana-oss"
+                volumes:
+                        - grafana-storage:/var/lib/grafana
+                        - $PWD/grafana.ini:/etc/grafana/grafana.ini
+                depends_on:
+                        - "prometheus"
+                networks:
+                        - traefik
+
+networks:
+        traefik:
+                external: true
+                name: traefik-service_default
+
+volumes:
+        grafana-storage:
+        prometheus-storage:
+</pre></table></code></div></div><p>We can remove any port exposure/mapping, as they will connect to traefik network. We could have created an internal network for prometheus -&gt; grafana traffic but It would not add much value.</p><p>Now let’s try to start our prometheus/grafana services and test them through Traefik</p><p>Can we still access those services through our custom ports (36200/36300) ? No we can’t since we removed the exposure from the docker-compose file</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>$ curl http://binsh.io:36200
+curl: (7) Failed to connect to binsh.io port 36200: Connection refused
+$ curl http://binsh.io:36300
+curl: (7) Failed to connect to binsh.io port 36300: Connection refused
+</pre></table></code></div></div><p>Can we access them through Traefik ? Yes, and It even redirects to https with a valid TLS certificate and basic authentication, nice !</p><p><img data-src="https://user-images.githubusercontent.com/72258375/147015794-67f4cc24-6e8a-4acb-a32e-176dc5c04e41.png" alt="image" data-proofer-ignore></p><p><img data-src="https://user-images.githubusercontent.com/72258375/147015819-680ad2f1-1020-4d26-9a13-b2e8713c36f8.png" alt="image" data-proofer-ignore></p><p>We reached our goal, and even removed any left-over ports that were not useful, so we can update our architecture as such:</p><p><img data-src="https://user-images.githubusercontent.com/72258375/147016044-b5fb7dcb-7bed-40ad-850b-871795c647ba.png" alt="image" data-proofer-ignore></p><h2 id="node_exporter-and-cadvisor">Node_exporter and Cadvisor<a href="#node_exporter-and-cadvisor" class="anchor"><i class="fas fa-hashtag"></i></a></h2></h2><p>Now that we have somewhere to send our monitoring onto, we can start collecting informations across the board</p><p>We will node_exporter for collecting host metric (how is our hardware doing) and Cadvisor for docker metrics (are our containers running into any bottlenecks)</p><p>https://hub.docker.com/r/prom/node-exporter https://hub.docker.com/r/google/cadvisor/</p><p>We create a new directory where we can begin our docker-compose file</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre>$ cat agent-monitoring-service
+$ touch docker-compose.yml
+</pre></table></code></div></div><p>** UNDER CONSTRUCTION **</p></div><div class="post-tail-wrapper text-muted"><div class="post-meta mb-3"> <i class="far fa-folder-open fa-fw mr-1"></i> <a href='/maxime-lair/categories/projectbob/'>ProjectBob</a>, <a href='/maxime-lair/categories/infrastructure/'>Infrastructure</a></div><div class="post-tags"> <i class="fa fa-tags fa-fw mr-1"></i> <a href="/maxime-lair/tags/linux/" class="post-tag no-text-decoration" >linux</a> <a href="/maxime-lair/tags/docker/" class="post-tag no-text-decoration" >docker</a> <a href="/maxime-lair/tags/grafana/" class="post-tag no-text-decoration" >grafana</a> <a href="/maxime-lair/tags/traefik/" class="post-tag no-text-decoration" >traefik</a> <a href="/maxime-lair/tags/prometheus/" class="post-tag no-text-decoration" >prometheus</a> <a href="/maxime-lair/tags/httpd/" class="post-tag no-text-decoration" >httpd</a> <a href="/maxime-lair/tags/node-exporter/" class="post-tag no-text-decoration" >node_exporter</a> <a href="/maxime-lair/tags/cadvisor/" class="post-tag no-text-decoration" >cadvisor</a></div><div class="post-tail-bottom d-flex justify-content-between align-items-center mt-3 pt-5 pb-2"><div class="license-wrapper"> This post is licensed under <a href="https://creativecommons.org/licenses/by/4.0/"> CC BY 4.0 </a> by the author.</div><div class="share-wrapper"> <span class="share-label text-muted mr-1">Share</span> <span class="share-icons"> <a href="https://twitter.com/intent/tweet?text=Docker introduction - Bin/sh&url=https://maxime-lair.github.io/maxime-lair/posts/docker_introduction/" data-toggle="tooltip" data-placement="top" title="Twitter" target="_blank" rel="noopener" aria-label="Twitter"> <i class="fa-fw fab fa-twitter"></i> </a> <i id="copy-link" class="fa-fw fas fa-link small" data-toggle="tooltip" data-placement="top" title="Copy link" title-succeed="Link copied successfully!"> </i> </span></div></div></div></div></div><div id="panel-wrapper" class="col-xl-3 pl-2 text-muted topbar-down"><div class="access"><div id="access-lastmod" class="post"><div class="panel-heading">Recent Update</div><ul class="post-content pl-0 pb-1 ml-1 mt-2"><li><a href="/maxime-lair/posts/sockets/">Sockets</a><li><a href="/maxime-lair/posts/networking_concepts/">Networking concepts</a></ul></div><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/maxime-lair/tags/linux/">linux</a> <a class="post-tag" href="/maxime-lair/tags/bash/">bash</a> <a class="post-tag" href="/maxime-lair/tags/initd/">initd</a> <a class="post-tag" href="/maxime-lair/tags/network/">network</a> <a class="post-tag" href="/maxime-lair/tags/bus/">bus</a> <a class="post-tag" href="/maxime-lair/tags/cadvisor/">cadvisor</a> <a class="post-tag" href="/maxime-lair/tags/concurrency/">concurrency</a> <a class="post-tag" href="/maxime-lair/tags/container/">container</a> <a class="post-tag" href="/maxime-lair/tags/device/">device</a> <a class="post-tag" href="/maxime-lair/tags/docker/">docker</a></div></div></div><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@1.0.1/dist/bootstrap-toc.min.js"></script><div id="toc-wrapper" class="pl-0 pr-4 mb-5"><div class="panel-heading pl-3 pt-2 mb-2">Contents</div><nav id="toc" data-toggle="toc"></nav></div></div></div><div class="row"><div class="col-12 col-lg-11 col-xl-8"><div id="tail-wrapper" class="pl-1 pr-1 pl-sm-2 pr-sm-2 pl-md-4 pr-md-4"><div id="related-posts" class="mt-5 mb-2 mb-sm-4"><h3 class="pt-2 mt-1 mb-4 ml-1" data-toc-skip>Further Reading</h3><div class="card-deck mb-4"><div class="card"> <a href="/maxime-lair/posts/pfsense/"><div class="card-body"> <em class="timeago small" date="2021-12-28 19:00:00 +0100" >Dec 28, 2021</em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>PFSense</h3><div class="text-muted small"><p> First, It can help, to change keyboard layout in PFSense (will reset at next reboot) kbdcontrol -l /usr/share/syscons/keymaps/[YOUR LOCALE LANGUAGE].iso.kbd WAN/LAN configuration WAN is the wide ...</p></div></div></a></div><div class="card"> <a href="/maxime-lair/posts/memory_and_storage/"><div class="card-body"> <em class="timeago small" date="2022-01-03 19:00:00 +0100" >Jan 3, 2022</em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>Memory and storage</h3><div class="text-muted small"><p> In this article, we will take a look at how memory and storage interact in Linux, the different technology available, and their perks and defaults Note: Im running a CentOS9 Stream in this article...</p></div></div></a></div><div class="card"> <a href="/maxime-lair/posts/io_management/"><div class="card-body"> <em class="timeago small" date="2022-01-04 19:00:00 +0100" >Jan 4, 2022</em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>IO management</h3><div class="text-muted small"><p> In/Out management on Linux allows us to understand how data flows in Linux, from information coming from the network card, to the hard-drive, passing by CPU, RAM or others devices. All systems wil...</p></div></div></a></div></div></div><div class="post-navigation d-flex justify-content-between"> <span class="btn btn-outline-primary disabled" prompt="Older"><p>-</p></span> <a href="/maxime-lair/posts/tmux/" class="btn btn-outline-primary" prompt="Newer"><p>Tmux</p></a></div></div></div></div><footer class="d-flex w-100 justify-content-center"><div class="d-flex justify-content-between align-items-center text-muted"><div class="footer-left"><p class="mb-0"> © 2025 <a href="https://github.com/maxime-lair">Maxime Lair</a>. <span data-toggle="tooltip" data-placement="top" title="Except where otherwise noted, the blog posts on this site are licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) License by the author.">Some rights reserved.</span></p></div><div class="footer-right"><p class="mb-0"> Powered by <a href="https://jekyllrb.com" target="_blank" rel="noopener">Jekyll</a> with <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> theme.</p></div></div></footer></div><div id="search-result-wrapper" class="d-flex justify-content-center unloaded"><div class="col-12 col-sm-11 post-content"><div id="search-hints"><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/maxime-lair/tags/linux/">linux</a> <a class="post-tag" href="/maxime-lair/tags/bash/">bash</a> <a class="post-tag" href="/maxime-lair/tags/initd/">initd</a> <a class="post-tag" href="/maxime-lair/tags/network/">network</a> <a class="post-tag" href="/maxime-lair/tags/bus/">bus</a> <a class="post-tag" href="/maxime-lair/tags/cadvisor/">cadvisor</a> <a class="post-tag" href="/maxime-lair/tags/concurrency/">concurrency</a> <a class="post-tag" href="/maxime-lair/tags/container/">container</a> <a class="post-tag" href="/maxime-lair/tags/device/">device</a> <a class="post-tag" href="/maxime-lair/tags/docker/">docker</a></div></div></div><div id="search-results" class="d-flex flex-wrap justify-content-center text-muted mt-3"></div></div></div></div><script src="https://cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js"></script> <script> $(function() { function updateMermaid(event) { if (event.source === window && event.data && event.data.direction === ModeToggle.ID) { const mode = event.data.message; if (typeof mermaid === "undefined") { return; } let expectedTheme = (mode === ModeToggle.DARK_MODE? "dark" : "default"); let config = { theme: expectedTheme }; /* Re-render the SVG › <https://github.com/mermaid-js/mermaid/issues/311#issuecomment-332557344> */ $(".mermaid").each(function() { let svgCode = $(this).prev().children().html(); $(this).removeAttr("data-processed"); $(this).html(svgCode); }); mermaid.initialize(config); mermaid.init(undefined, ".mermaid"); } } let initTheme = "default"; if ($("html[mode=dark]").length > 0 || ($("html[mode]").length == 0 && window.matchMedia("(prefers-color-scheme: dark)").matches ) ) { initTheme = "dark"; } let mermaidConf = { theme: initTheme /* <default|dark|forest|neutral> */ }; /* Markdown converts to HTML */ $("pre").has("code.language-mermaid").each(function() { let svgCode = $(this).children().html(); $(this).addClass("unloaded"); $(this).after(`<div class=\"mermaid\">${svgCode}</div>`); }); mermaid.initialize(mermaidConf); window.addEventListener("message", updateMermaid); }); </script><div id="mask"></div><a id="back-to-top" href="#" aria-label="back-to-top" class="btn btn-lg btn-box-shadow" role="button"> <i class="fas fa-angle-up"></i> </a> <script src="https://cdn.jsdelivr.net/npm/simple-jekyll-search@1.10.0/dest/simple-jekyll-search.min.js"></script> <script> SimpleJekyllSearch({ searchInput: document.getElementById('search-input'), resultsContainer: document.getElementById('search-results'), json: '/maxime-lair/assets/js/data/search.json', searchResultTemplate: '<div class="pl-1 pr-1 pl-sm-2 pr-sm-2 pl-lg-4 pr-lg-4 pl-xl-0 pr-xl-0"> <a href="{url}">{title}</a><div class="post-meta d-flex flex-column flex-sm-row text-muted mt-1 mb-1"> {categories} {tags}</div><p>{snippet}</p></div>', noResultsText: '<p class="mt-5">Oops! No result founds.</p>', templateMiddleware: function(prop, value, template) { if (prop === 'categories') { if (value === '') { return `${value}`; } else { return `<div class="mr-sm-4"><i class="far fa-folder fa-fw"></i>${value}</div>`; } } if (prop === 'tags') { if (value === '') { return `${value}`; } else { return `<div><i class="fa fa-tag fa-fw"></i>${value}</div>`; } } } }); </script> <script src="https://cdn.jsdelivr.net/combine/npm/lozad/dist/lozad.min.js,npm/magnific-popup@1/dist/jquery.magnific-popup.min.js,npm/clipboard@2/dist/clipboard.min.js"></script> <script defer src="/maxime-lair/assets/js/dist/post.min.js"></script> <script> /* see: <https://docs.mathjax.org/en/latest/options/input/tex.html#tex-options> */ MathJax = { tex: { inlineMath: [ /* start/end delimiter pairs for in-line math */ ['$','$'], ['\\(','\\)'] ], displayMath: [ /* start/end delimiter pairs for display math */ ['$$', '$$'], ['\\[', '\\]'] ] } }; </script> <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script> <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"> </script> <script src="https://cdn.jsdelivr.net/combine/npm/popper.js@1.16.1,npm/bootstrap@4/dist/js/bootstrap.min.js"></script> <script defer src="/maxime-lair/app.js"></script> <script defer src="https://www.googletagmanager.com/gtag/js?id="></script> <script> document.addEventListener("DOMContentLoaded", function(event) { window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', ''); }); </script>
