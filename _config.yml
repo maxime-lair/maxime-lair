@@ -18,13 +18,14 @@ timezone: Europe/Paris
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: RoadTo                          # the main title
+title: Bin/sh                          # the main title
 
-tagline: Road to learning DevOps       # it will display as the sub-title
+tagline: Have fun reading       # it will display as the sub-title
 
 description: >-                        # used by seo meta and the atom feed
   A blog tracing my journey into learning
-  Devops technologies, while building an infrastructure
+  how to build a nice infrastructure. Can be about
+  SRE, DevOps or platform stuff.
 
 # fill in the protocol & hostname for your site, e.g., 'https://username.github.io'
 url: 'https://maxime-lair.github.io'
